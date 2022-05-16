@@ -38,6 +38,10 @@ def replace_extn(file_path, extn, suffix=None, underscore="True"):
     return os.path.join(dir_path, file_name)
 
 
+def get_relative_path(path, start_path):
+    return os.path.relpath(path, start=start_path)
+
+
 def add_suffix(file_path, suffix, underscore="True"):
     extn = get_extn(file_path)
     return replace_extn(file_path, extn, suffix=suffix, underscore=underscore)
