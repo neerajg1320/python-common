@@ -61,3 +61,12 @@ def get_text_file_extn():
 
 def get_excel_file_extn():
     return ".xlsx"
+
+
+def is_pdf(file_path):
+    return get_extn(file_path).lower() == ".pdf"
+
+
+def is_txt(file_path):
+    l_extn = get_extn(file_path).lower()
+    return  l_extn == ".txt" or l_extn == ".text"
