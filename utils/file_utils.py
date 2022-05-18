@@ -1,6 +1,12 @@
 import os
 
 
+def get_base_name(file_path):
+    file_name = os.path.basename(file_path)
+    parts = os.path.splitext(file_name)
+    return parts[0]
+
+
 def get_extn(file_path):
     file_name = os.path.basename(file_path)
     parts = os.path.splitext(file_name)
