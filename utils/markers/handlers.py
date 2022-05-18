@@ -46,7 +46,7 @@ def process_text_with_markers(input_text, markers, meta_data, debug=True):
 
             for bound in bounded:
                 max_date = bound['max_date']
-                if file_date <= get_date_from_string(max_date):
+                if file_date is not None and file_date <= get_date_from_string(max_date):
                     regexes = bound['regex']
                     if debug:
                         print("process_text_with_markers(): regex selected bounded['max_date']={}".format(max_date))
