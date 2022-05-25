@@ -1,7 +1,12 @@
+import os.path
 import re
 import pandas as pd
+import logging
 from utils.regex_utils import check_compile_regex
 from utils.debug_utils import print_file_function
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_dataframe(var):
@@ -110,6 +115,80 @@ def dflist_write_excel(dflist, filepath, *args, **kwargs):
 
     writer.save()
 
+
+# https://stackoverflow.com/questions/49519696/getting-attributeerror-workbook-object-has-no-attribute-add-worksheet-whil
+def df_append_excel(df, file_path, sheet_name, **kwargs):
+    """
+    Append a DataFrame [df] to existing Excel file [filename]
+    into [sheet_name] Sheet.
+    If [filename] doesn't exist, then this function will create it.
+
+    Parameters:
+      filename : File path or existing ExcelWriter
+                 (Example: '/path/to/file.xlsx')
+      df : dataframe to save to workbook
+      sheet_name : Name of sheet which will contain DataFrame.
+                   (default: 'Sheet1')
+      startrow : upper left cell row to dump data frame.
+                 Per default (startrow=None) calculate the last row
+                 in the existing DF and write to the next row...
+      truncate_sheet : truncate (remove and recreate) [sheet_name]
+                       before writing DataFrame to Excel file
+      to_excel_kwargs : arguments which will be passed to `DataFrame.to_excel()`
+                        [can be dictionary]
+
+    Returns: None
+    """
+    from openpyxl import load_workbook
+
+    # ignore [engine] parameter if it was passed
+    if 'engine' in kwargs:
+        kwargs.pop('engine')
+    startrow = kwargs.pop('startrow', None)
+    truncate_sheet = kwargs.pop('truncate_sheet', None)
+
+    if 'index' not in kwargs:
+        kwargs['index'] = False
+
+    file_exists = os.path.exists(file_path)
+    if file_exists:
+        book = load_workbook(file_path)
+
+    # This will create a file of size zero
+    writer = pd.ExcelWriter(file_path,
+                            engine='openpyxl',
+                            datetime_format='yyyy-mm-dd',
+                            date_format='yyyy-mm-dd')
+
+    if file_exists:
+        writer.book = book
+        logger.info("Existing sheetnames={}".format(writer.book.sheetnames))
+
+    # get the last row in the existing Excel sheet
+    # if it was not specified explicitly
+    if startrow is None and sheet_name in writer.book.sheetnames:
+        startrow = writer.book[sheet_name].max_row
+
+    # truncate sheet
+    if truncate_sheet and sheet_name in writer.book.sheetnames:
+        # index of [sheet_name] sheet
+        idx = writer.book.sheetnames.index(sheet_name)
+        # remove [sheet_name]
+        writer.book.remove(writer.book.worksheets[idx])
+        # create an empty sheet [sheet_name] using old index
+        writer.book.create_sheet(sheet_name, idx)
+
+    # copy existing sheets
+    writer.sheets = {ws.title:ws for ws in writer.book.worksheets}
+
+    if startrow is None:
+        startrow = 0
+
+    # write out the new sheet
+    df.to_excel(writer, sheet_name=sheet_name, startrow=startrow, **kwargs)
+
+    # save the workbook
+    writer.save()
 
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
 # Usage:
