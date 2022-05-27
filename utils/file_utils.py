@@ -76,3 +76,11 @@ def is_pdf(file_path):
 def is_txt(file_path):
     l_extn = get_extn(file_path).lower()
     return  l_extn == ".txt" or l_extn == ".text"
+
+def is_csv(file_path):
+    l_extn = get_extn(file_path).lower()
+    return  l_extn == ".csv"
+
+def is_xlsx(file_path):
+    l_extn = get_extn(file_path).lower()
+    return  l_extn == ".xlsx"

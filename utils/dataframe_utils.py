@@ -220,3 +220,16 @@ def filter_by_signature(row, signature, header_signature=None):
         return True
 
     return False
+
+def df_filter_by_row_signature(df, signature, header_signature=None, debug=False):
+    frame = df.applymap(type)
+    frame = frame.applymap(lambda x: x.__name__)
+
+    if debug:
+        print("process_frame_with_signature(): Show signature")
+        df_print(frame.apply(lambda row: get_signature(row), axis=1))
+
+    boolean_frame = frame.apply(lambda row: filter_by_signature(row, signature, header_signature=header_signature),
+                                axis=1)
+    return df[boolean_frame]
+
