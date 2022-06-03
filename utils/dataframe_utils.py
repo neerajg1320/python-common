@@ -162,7 +162,7 @@ def df_append_excel(df, file_path, sheet_name, **kwargs):
 
     if file_exists:
         writer.book = book
-        logger.info("Existing sheetnames={}".format(writer.book.sheetnames))
+        # logger.info("Existing sheetnames={}".format(writer.book.sheetnames))
 
     # get the last row in the existing Excel sheet
     # if it was not specified explicitly
