@@ -1,6 +1,7 @@
 import os.path
 import re
 import pandas as pd
+import json
 import logging
 from utils.regex_utils import check_compile_regex
 from utils.debug_utils import print_file_function
@@ -114,6 +115,10 @@ def dflist_write_excel(dflist, filepath, *args, **kwargs):
         df.to_excel(writer, sheet_name=suffix, *args, **kwargs)
 
     writer.save()
+
+
+def df_to_oriented_json(df):
+    return json.loads(df.to_json(orient="table"))
 
 
 # https://stackoverflow.com/questions/49519696/getting-attributeerror-workbook-object-has-no-attribute-add-worksheet-whil
