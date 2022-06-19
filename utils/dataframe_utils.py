@@ -14,6 +14,10 @@ def is_dataframe(var):
     return isinstance(var, pd.DataFrame)
 
 
+def df_new_dataframe():
+    return pd.DataFrame()
+
+
 def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
     # error = None
     # print("Regex Text: ", regex_text)
@@ -119,6 +123,10 @@ def dflist_write_excel(dflist, filepath, *args, **kwargs):
 
 def df_to_oriented_json(df):
     return json.loads(df.to_json(orient="table"))
+
+
+def df_from_oriented_json(json_data):
+    return pd.read_json(json.dumps(json_data), orient='table')
 
 
 # https://stackoverflow.com/questions/49519696/getting-attributeerror-workbook-object-has-no-attribute-add-worksheet-whil
