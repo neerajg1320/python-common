@@ -42,7 +42,7 @@ def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
 FLAG_ACTIVE_DEFAULT = True
 FLAG_FORCE_LOCATION = False
 
-def df_print(df, dtypes=False, index=False, shape=False, new_line=True, gui=False, active=True, location=True):
+def df_print(df, dtypes=False, index=False, shape=False, new_line=True, gui=False, active=True, location=True, columns=False):
     if not active:
         return
 
@@ -75,6 +75,9 @@ def df_print(df, dtypes=False, index=False, shape=False, new_line=True, gui=Fals
 
         if dtypes:
             print(df.dtypes)
+
+        if columns:
+            print(df.columns)
 
 
 def df_read_excel(*args, **kwargs):
