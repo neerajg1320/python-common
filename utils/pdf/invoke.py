@@ -1,18 +1,38 @@
 import subprocess
 
 
-def pdf_to_text_subprocess(pdf_file_path, text_file_path, password=None, debug=False):
+def subprocess_pdf_to_text(pdf_file_path, text_file_path, password=None, debug=False):
     command = ['pdftotext', '-layout', pdf_file_path, text_file_path]
     if password is not None:
         command.extend(['-upw', password, '-opw', password])
 
     if debug:
-        print(" ".join(command))
+        print("subprocess_pdf_to_text():", " ".join(command))
 
     subprocess.run(command)
 
 
-def pdf_unlock_subprocess(pdf_file_path, unlocked_file_path, password, debug=False):
+def subprocess_pdf_to_images(pdf_file_path, images_root, format="png", page_numbers=True,  password=None, debug=False):
+    command = ['pdfimages']
+
+    if format == "png":
+        command.extend(['-png'])
+
+    if page_numbers:
+        command.extend(['-p'])
+
+    if password is not None:
+        command.extend(['-upw', password, '-opw', password])
+
+    command.extend([pdf_file_path, images_root])
+
+    if debug:
+        print("subprocess_pdf_to_images():", " ".join(command))
+
+    subprocess.run(command)
+
+
+def subprocess_pdf_unlock(pdf_file_path, unlocked_file_path, password, debug=False):
     command = ["qpdf", "--password={}".format(password), '--decrypt', pdf_file_path, unlocked_file_path]
 
     if debug:
