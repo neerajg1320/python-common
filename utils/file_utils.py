@@ -76,6 +76,8 @@ def get_json_file_extn():
 def is_pdf(file_path):
     return get_extn(file_path).lower() == ".pdf"
 
+def is_png(file_path):
+    return get_extn(file_path).lower() == ".png"
 
 def is_txt(file_path):
     l_extn = get_extn(file_path).lower()
