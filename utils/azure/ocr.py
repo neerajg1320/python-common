@@ -4,7 +4,7 @@ from azure.cognitiveservices.vision.computervision.models import OperationStatus
 import time
 
 
-def azure_get_comutervision_client():
+def azure_get_computervision_client():
     key = 'be9dc1d6b084476b9a886546815739b0'
     endpoint = 'https://glassball-ocr-instance.cognitiveservices.azure.com/'
 
