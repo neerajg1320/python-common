@@ -2,12 +2,18 @@ import os
 
 
 def get_base_name(file_path):
+    if file_path is None or not isinstance(file_path, str):
+        return None
+
     file_name = os.path.basename(file_path)
     parts = os.path.splitext(file_name)
     return parts[0]
 
 
 def get_extn(file_path):
+    if file_path is None or not isinstance(file_path, str):
+        return None
+
     file_name = os.path.basename(file_path)
     parts = os.path.splitext(file_name)
 
@@ -18,6 +24,9 @@ def get_extn(file_path):
     
     return extn
 
+
+def get_extn_no_dot(file_path):
+    return get_extn(file_path)[1:]
 
 def replace_extn(file_path, extn, suffix=None, underscore="True"):
     dir_path = os.path.dirname(file_path)
