@@ -249,3 +249,6 @@ def df_filter_by_row_signature(df, signature, header_signature=None, debug=False
                                 axis=1)
     return df[boolean_frame]
 
+
+def df_is_empty(df):
+    return df.empty

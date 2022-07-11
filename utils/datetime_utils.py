@@ -1,6 +1,6 @@
 import pytz
 import datetime
-
+import re
 
 # https://www.kite.com/python/answers/how-to-set-the-timezone-of-a-datetime-in-python#:~:text=Use%20pytz.,the%20timezone%20of%20a%20datetime
 def add_time_zone_utc(date):
@@ -27,3 +27,11 @@ def get_datetime_from_string(datetime_str, format="%Y-%m-%d"):
 
 def get_isoformat_date_str_from_datetime(datetime):
     return datetime.strftime("%Y-%m-%d")
+
+
+def get_date_from_str(s):
+    regex_date = r'\d{4}-\d{2}-\d{2}'
+    pattern_date = re.compile(regex_date)
+
+    mo = pattern_date.search(s)
+    return mo.group()
