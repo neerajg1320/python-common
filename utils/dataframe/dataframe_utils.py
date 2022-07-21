@@ -222,27 +222,6 @@ class SupressSettingWithCopyWarning:
         pd.options.mode.chained_assignment = 'warn'
 
 
-def get_signature_abbreviation(row):
-    arr = []
-    for cell in row:
-        arr.append(cell[0])
-    return ''.join(arr)
-
-
-# TBD: This is not a simple match anymore, we have to see if the types align as well
-# First of all get signature has to change
-def filter_by_signature_abbreviation(row, signature, header_signature=None):
-    row_signature = get_signature_abbreviation(row)
-
-    if row_signature == signature:
-        return True
-
-    if header_signature is not None and row_signature == header_signature:
-        return True
-
-    return False
-
-
 type_group_map = {
     "int": "number",
     "float": "number",
@@ -278,31 +257,19 @@ def filter_by_signature(row, signature, match_strategy="exact"):
 def filter_by_row_and_header_signature(row, row_signature, header_signature=None, match_strategy="exact"):
     match = filter_by_signature(row, row_signature, match_strategy=match_strategy)
 
-    if not match:
+    if not match and header_signature is not None:
         match = filter_by_signature(row, header_signature, match_strategy=match_strategy)
 
     return match
 
 
+def get_cell_signature(cell):
+    return type(cell).__name__
+
+
 def df_signature(df):
-    frame = df.applymap(type)
-    frame = frame.applymap(lambda x: x.__name__)
-    return frame
+    return df.applymap(lambda x: get_cell_signature(x))
 
-
-def df_filter_by_row_signature_abbreviation(df, signature, header_signature=None, match_strategy='exact', debug=False):
-    frame = df_signature(df)
-
-    if debug:
-        print("process_frame_with_signature(): Show signature")
-        df_print(frame.apply(lambda row: get_signature_abbreviation(row), axis=1))
-
-    boolean_frame = frame.apply(
-        lambda row: filter_by_row_and_header_signature(row, signature, header_signature=header_signature, match_strategy=match_strategy),
-        axis=1
-    )
-
-    return df[boolean_frame]
 
 def df_filter_by_row_and_header_signature(df, row_signature, header_signature=None, match_strategy='exact', debug=False):
     logger.info("df_filter_by_row_signature():")
