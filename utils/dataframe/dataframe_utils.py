@@ -223,6 +223,7 @@ class SupressSettingWithCopyWarning:
 
 
 type_group_map = {
+    "nan": "float",
     "int": "number",
     "float": "number",
     "str": "string",
@@ -235,18 +236,19 @@ def get_type_group(type_str):
     return type_group_map[type_str]
 
 
-def filter_by_signature(row, signature, match_strategy="exact"):
+# The match_strategy currently is disabled
+def filter_by_signature_and_value(row, row_filter, match_strategy="exact"):
+    # TBD: We might support a percentage match
     match = True
-    for tuple in  zip(row, [elm["type"] for elm in signature]):
-        if tuple[0] != tuple[1]:
-            if match_strategy != "exact":
-                if tuple[1] is not None:
-                    if match_strategy == "similar":
-                        match = get_type_group(tuple[0]) == get_type_group(tuple[1])
-            else:
-                match = False
+    for (cell, cell_filter) in  zip(row, row_filter):
+        cell_type = get_cell_signature(cell)
 
-        if match == False:
+        accepted_types = cell_filter.get("types")
+        if accepted_types is None:
+            accepted_types = [cell_filter.get("type")]
+
+        if cell_type not in accepted_types:
+            match = False
             break
 
     return match
@@ -254,11 +256,11 @@ def filter_by_signature(row, signature, match_strategy="exact"):
 
 # TBD: This seems insufficient.
 # Even though we have knowledge whether filtered row is a header or not but we are not passing it back
-def filter_by_row_and_header_signature(row, row_signature, header_signature=None, match_strategy="exact"):
-    match = filter_by_signature(row, row_signature, match_strategy=match_strategy)
+def filter_by_row_and_header_signature_and_value(row, row_signature, header_signature=None, match_strategy="exact"):
+    match = filter_by_signature_and_value(row, row_signature, match_strategy=match_strategy)
 
     if not match and header_signature is not None:
-        match = filter_by_signature(row, header_signature, match_strategy=match_strategy)
+        match = filter_by_signature_and_value(row, header_signature, match_strategy=match_strategy)
 
     return match
 
@@ -276,16 +278,17 @@ def df_filter_by_row_and_header_signature(df, row_signature, header_signature=No
     logger.info("signature: {}".format(row_signature))
     logger.info("header_signature: {}".format(header_signature))
 
+    # This is currently not used
     signature_df = df_signature(df)
     if debug:
         logger.info("signature_df: ")
         df_print(signature_df)
 
-    boolean_frame = signature_df.apply(
-        lambda row: filter_by_row_and_header_signature(row,
-                                                       row_signature,
-                                                       header_signature=header_signature,
-                                                       match_strategy=match_strategy),
+    boolean_frame = df.apply(
+        lambda row: filter_by_row_and_header_signature_and_value(row,
+                                                                 row_signature,
+                                                                 header_signature=header_signature,
+                                                                 match_strategy=match_strategy),
         axis=1
     )
 
