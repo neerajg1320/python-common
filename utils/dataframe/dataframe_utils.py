@@ -1,6 +1,7 @@
 import os.path
 import re
 import pandas as pd
+import numpy as np
 import json
 import logging
 from utils.regex_utils import check_compile_regex
@@ -19,10 +20,6 @@ def df_new_dataframe():
 
 
 def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
-    # error = None
-    # print("Regex Text: ", regex_text)
-    # print("Error: ", error)
-
     p, error = check_compile_regex(regex_text, flags=flags)
 
     if error:
@@ -30,11 +27,68 @@ def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
         return None
 
     s = pd.Series(input_file_text)
-    df = pd.DataFrame()
     try:
         df = s.str.extractall(regex_text , re.MULTILINE)
     except ValueError as e:
         print(e)
+
+    return df
+
+
+def df_apply_regex_on_column(df, regex_text, column=None):
+    if column is None:
+        raise RuntimeError("column cannot be None")
+
+    new_df = df[column].str.extract(regex_text, expand=True)
+    df[new_df.columns] = new_df
+
+    return df
+
+# TBD: This is a major problem here.
+# We need to replace columns if all are nan
+# Even though we have created this, it is not good enough
+def df_merge_on_index(df1, df2, columns=[]):
+    if len(columns) < 1:
+        columns = df2.columns
+
+    logger.info("df_merge_on_index(): columns={}".format(columns))
+
+    left_suffix = "_x"
+    right_suffix = "_y"
+    df_merged = df1.merge(df2, how="left", left_index=True, right_index=True, suffixes=(left_suffix, right_suffix))
+
+    left_columns = [col+left_suffix for col in columns]
+    right_columns = [col+right_suffix for col in columns]
+
+    if (set(left_columns).issubset(set(df_merged.columns))):
+        logger.info("We need to merge now")
+
+    df_print(df_merged, index=True, shape=True)
+
+    return df_merged
+
+
+def df_apply_regexlist_on_column(df, regex_list, column=None, remove=True):
+    if column is None:
+        raise RuntimeError("column cannot be None")
+
+    match_df = None
+    for index, regex_text in enumerate(regex_list):
+        logger.info("regex={}".format(regex_text))
+
+        new_df = df[column].str.extract(regex_text, expand=True)
+
+        if match_df is None:
+            match_df = new_df
+        else:
+            match_df.loc[match_df['PaymentMode'].isna(), new_df.columns] = new_df
+            # match_df.loc[match_df['PaymentMode'].notna(), column] = np.nan
+
+        df_print(match_df, index=True, shape=True)
+
+    df[match_df.columns] = match_df
+    if remove:
+        df.loc[match_df['PaymentMode'].notna(), column] = np.nan
 
     return df
 
