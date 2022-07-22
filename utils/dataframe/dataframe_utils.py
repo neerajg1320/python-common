@@ -245,7 +245,13 @@ def filter_by_signature_and_value(row, row_filter, match_strategy="exact"):
 
         accepted_types = cell_filter.get("types")
         if accepted_types is None:
-            accepted_types = [cell_filter.get("type")]
+            accepted_type = cell_filter.get("type")
+            if isinstance(accepted_type, list):
+                raise RuntimeError("Only one type accepted. For multiple use types")
+            accepted_types = [accepted_type]
+        else:
+            if not isinstance(accepted_types, list):
+                raise RuntimeError("Specify types in a list format")
 
         if cell_type not in accepted_types:
             match = False
