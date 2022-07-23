@@ -76,6 +76,9 @@ def df_apply_regexlist_on_column(df, regex_list, column=None, remove=True):
     for index, regex_text in enumerate(regex_list):
         logger.info("regex={}".format(regex_text))
 
+        if not column in df.columns:
+            raise RuntimeError("column '{}' not found in columns: {}".format(column, df.columns))
+
         new_df = df[column].str.extract(regex_text, expand=True)
 
         if match_df is None:
