@@ -1,4 +1,5 @@
 import os
+import shutil
 
 
 def get_base_name(file_path):
@@ -103,3 +104,7 @@ def is_csv(file_path):
 def is_xlsx(file_path):
     l_extn = get_extn(file_path).lower()
     return  l_extn == ".xlsx"
+
+
+def copy_file(src, dst):
+    shutil.copy(src, dst)
