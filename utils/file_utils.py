@@ -108,3 +108,6 @@ def is_xlsx(file_path):
 
 def copy_file(src, dst):
     shutil.copy(src, dst)
+
+def move_file(src, dst):
+    shutil.move(src, dst)
