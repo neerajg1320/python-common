@@ -68,12 +68,13 @@ def df_merge_on_index(df1, df2, columns=[]):
     return df_merged
 
 
-def df_apply_regexlist_on_column(df, regex_list, column=None, new_anchor_column=None, remove=True):
+def df_apply_regexlist_on_column(df, regex_list, column=None, new_anchor_column=None, remove=True, multiple=False, debug=False):
     if column is None:
         raise RuntimeError("column cannot be None")
 
     logger.info("df_apply_regexlist_on_column(): Input frame")
     df_print(df[column])
+
 
     match_df = None
     for index, regex_text in enumerate(regex_list):
@@ -82,11 +83,19 @@ def df_apply_regexlist_on_column(df, regex_list, column=None, new_anchor_column=
         if not column in df.columns:
             raise RuntimeError("column '{}' not found in columns: {}".format(column, df.columns))
 
-        new_df = df[column].str.extract(regex_text, re.MULTILINE, expand=True)
+        if multiple:
+            new_df = df[column].str.extractall(regex_text, re.MULTILINE)
+            index_level_count = len(new_df.index.levels)
+            if debug:
+                logger.info("New DF: Index Level Count: {}".format(index_level_count))
+            new_df = new_df.droplevel(index_level_count - 1)
+        else:
+            new_df = df[column].str.extract(regex_text, re.MULTILINE, expand=True)
 
         if match_df is None:
             match_df = new_df
         else:
+            # Set only the rows which are not already set
             if new_anchor_column is not None:
                 match_df.loc[match_df[new_anchor_column].isna(), new_df.columns] = new_df
 
