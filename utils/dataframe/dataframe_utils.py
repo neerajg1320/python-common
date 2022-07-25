@@ -68,9 +68,12 @@ def df_merge_on_index(df1, df2, columns=[]):
     return df_merged
 
 
-def df_apply_regexlist_on_column(df, regex_list, column=None, remove=True):
+def df_apply_regexlist_on_column(df, regex_list, column=None, new_anchor_column=None, remove=True):
     if column is None:
         raise RuntimeError("column cannot be None")
+
+    logger.info("df_apply_regexlist_on_column(): Input frame")
+    df_print(df[column])
 
     match_df = None
     for index, regex_text in enumerate(regex_list):
@@ -79,19 +82,32 @@ def df_apply_regexlist_on_column(df, regex_list, column=None, remove=True):
         if not column in df.columns:
             raise RuntimeError("column '{}' not found in columns: {}".format(column, df.columns))
 
-        new_df = df[column].str.extract(regex_text, expand=True)
+        new_df = df[column].str.extract(regex_text, re.MULTILINE, expand=True)
 
         if match_df is None:
             match_df = new_df
         else:
-            match_df.loc[match_df['PaymentMode'].isna(), new_df.columns] = new_df
-            # match_df.loc[match_df['PaymentMode'].notna(), column] = np.nan
+            if new_anchor_column is not None:
+                match_df.loc[match_df[new_anchor_column].isna(), new_df.columns] = new_df
 
-        df_print(match_df, index=True, shape=True)
+        logger.info("Match DF:")
+        df_print(match_df, index=True, shape=True, dtypes=True)
 
-    df[match_df.columns] = match_df
-    if remove:
-        df.loc[match_df['PaymentMode'].notna(), column] = np.nan
+    logger.info("DF:")
+
+    # Check: Force dropping of columns
+    df.drop(column, axis=1, inplace=True)
+
+    df_print(df, index=True, shape=True, dtypes=True)
+
+    # This has to be corrected and we have to use join, otherwise exisiting columns are overwritten
+    # df[match_df.columns] = match_df
+    df = df.join(match_df, how="left", lsuffix="_x", rsuffix="_y")
+
+    if remove and new_anchor_column is not None:
+        df.loc[match_df[new_anchor_column].notna(), column] = np.nan
+
+    # logger.info(df.columns)
 
     return df
 
@@ -298,7 +314,7 @@ def filter_by_signature_and_value(row, row_filter, match_strategy="exact"):
     # TBD: We might support a percentage match
     match = True
     for (cell, cell_filter) in  zip(row, row_filter):
-        cell_type = get_cell_signature(cell)
+        cell_type = get_cell_type_signature(cell)
 
         accepted_types = cell_filter.get("types")
         if accepted_types is None:
@@ -328,12 +344,12 @@ def filter_by_row_and_header_signature_and_value(row, row_signature, header_sign
     return match
 
 
-def get_cell_signature(cell):
+def get_cell_type_signature(cell):
     return type(cell).__name__
 
 
-def df_signature(df):
-    return df.applymap(lambda x: get_cell_signature(x))
+def df_type_signature(df):
+    return df.applymap(lambda x: get_cell_type_signature(x))
 
 
 def df_filter_by_row_and_header_signature(df, row_signature, header_signature=None, match_strategy='exact', debug=False):
@@ -342,7 +358,7 @@ def df_filter_by_row_and_header_signature(df, row_signature, header_signature=No
     logger.info("header_signature: {}".format(header_signature))
 
     # This is currently not used
-    signature_df = df_signature(df)
+    signature_df = df_type_signature(df)
     if debug:
         logger.info("signature_df: ")
         df_print(signature_df)
