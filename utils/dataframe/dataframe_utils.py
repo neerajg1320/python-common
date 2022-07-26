@@ -386,3 +386,12 @@ def df_filter_by_row_and_header_signature(df, row_signature, header_signature=No
 
 def df_is_empty(df):
     return df.empty
+
+
+aggregate_function_map = {
+    "sum": np.sum,
+}
+
+
+def get_aggregate_function(key):
+    return aggregate_function_map.get(key, np.sum)
