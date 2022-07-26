@@ -23,14 +23,14 @@ def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
     p, error = check_compile_regex(regex_text, flags=flags)
 
     if error:
-        print("Regex has errors: ", error)
+        logger.error("Regex has errors: ", error)
         return None
 
     s = pd.Series(input_file_text)
     try:
         df = s.str.extractall(regex_text , re.MULTILINE)
     except ValueError as e:
-        print(e)
+        logger.error(e)
 
     return df
 
@@ -142,27 +142,27 @@ def df_print(df, count=20, dtypes=False, index=False, shape=False, new_line=True
 
     if gui:
         # gui = show(df, settings={'block': True})
-        print("pandas_gui not used")
+        logger.info("pandas_gui not used")
     else:
-        if new_line:
-            print()
-
         if count > 0:
             df = df.head(count)
 
-        print(df)
+        if new_line:
+            logger.info("\n")
+
+        logger.info(df)
 
         if index:
-            print(df.index)
+            logger.info(df.index)
 
         if shape:
-            print(df.shape)
+            logger.info(df.shape)
 
         if dtypes:
-            print(df.dtypes)
+            logger.info(df.dtypes)
 
         if columns:
-            print(df.columns)
+            logger.info(df.columns)
 
 
 def df_read_excel(*args, **kwargs):
@@ -199,11 +199,11 @@ def dflist_write_excel(dflist, filepath, *args, **kwargs):
     for dfentry in dflist:
         df = dfentry['dataframe']
         suffix = dfentry['suffix']
-        # print('{} df.dtypes:'.format(suffix), df.dtypes)
-        # df_print(df)
+
         if suffix is None or suffix == "":
             suffix = "Sheet1"
-            print('dflist_write_excel: no sheetname provided, using default {}'.format(suffix))
+            logger.info('dflist_write_excel: no sheetname provided, using default {}'.format(suffix))
+
         df.to_excel(writer, sheet_name=suffix, *args, **kwargs)
 
     writer.save()
