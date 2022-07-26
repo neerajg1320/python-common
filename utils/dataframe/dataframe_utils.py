@@ -68,13 +68,13 @@ def df_merge_on_index(df1, df2, columns=[]):
     return df_merged
 
 
-def df_apply_regexlist_on_column(df, regex_list, column=None, new_anchor_column=None, remove=True, multiple=False, debug=False):
+def df_apply_regexlist_on_column(df, regex_list, column=None, new_anchor_column=None, remove=True, multiple=False, join_original=True, join_columns=[], debug=False):
     if column is None:
         raise RuntimeError("column cannot be None")
 
-    logger.info("df_apply_regexlist_on_column(): Input frame")
-    df_print(df[column])
-
+    if debug:
+        logger.info("df_apply_regexlist_on_column(): Input frame")
+        df_print(df[column])
 
     match_df = None
     for index, regex_text in enumerate(regex_list):
@@ -99,24 +99,24 @@ def df_apply_regexlist_on_column(df, regex_list, column=None, new_anchor_column=
             if new_anchor_column is not None:
                 match_df.loc[match_df[new_anchor_column].isna(), new_df.columns] = new_df
 
-        logger.info("Match DF:")
-        df_print(match_df, index=True, shape=True, dtypes=True)
+        if debug:
+            logger.info("Match DF:")
+            df_print(match_df, index=True, shape=True, dtypes=True)
 
-    logger.info("DF:")
+    if join_original:
+        # Check: Force dropping of columns
+        # df.drop(column, axis=1, inplace=True)
 
-    # Check: Force dropping of columns
-    df.drop(column, axis=1, inplace=True)
+        df = df[join_columns].join(match_df, how="left", lsuffix="_x", rsuffix="_y")
 
-    df_print(df, index=True, shape=True, dtypes=True)
+        if remove and new_anchor_column is not None:
+            df.loc[match_df[new_anchor_column].notna(), column] = np.nan
 
-    # This has to be corrected and we have to use join, otherwise exisiting columns are overwritten
-    # df[match_df.columns] = match_df
-    df = df.join(match_df, how="left", lsuffix="_x", rsuffix="_y")
-
-    if remove and new_anchor_column is not None:
-        df.loc[match_df[new_anchor_column].notna(), column] = np.nan
-
-    # logger.info(df.columns)
+        if debug:
+            logger.info("DF after joining:")
+            df_print(df, index=True, shape=True, dtypes=True)
+    else:
+        df = match_df
 
     return df
 
