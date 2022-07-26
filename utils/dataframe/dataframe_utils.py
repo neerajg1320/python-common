@@ -32,6 +32,10 @@ def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
     except ValueError as e:
         logger.error(e)
 
+    # Verify for later:
+    # Drop level 0 as we are using the whole string and the level was create as we converted string to pd.Series
+    df = df.droplevel(0)
+
     return df
 
 
