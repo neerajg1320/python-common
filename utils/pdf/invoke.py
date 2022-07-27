@@ -13,10 +13,10 @@ def subprocess_pdf_to_text(pdf_file_path, text_file_path, password=None, debug=F
 
 
 # This extracts the images embedded in a pdf
-def subprocess_pdf_extract_images(pdf_file_path, images_root, format="png", page_numbers=True, password=None, debug=False):
+def subprocess_pdf_extract_images(pdf_file_path, images_root, image_format="png", page_numbers=True, password=None, debug=False):
     command = ['pdfimages']
 
-    if format == "png":
+    if image_format.lower() == "png":
         command.extend(['-png'])
 
     if page_numbers:
@@ -34,10 +34,10 @@ def subprocess_pdf_extract_images(pdf_file_path, images_root, format="png", page
 
 
 # This creates images for each page of a pdf
-def subprocess_pdf_create_images(pdf_file_path, images_root, format="png", password=None, debug=False):
+def subprocess_pdf_create_images(pdf_file_path, images_root, image_format="png", password=None, debug=False):
     command = ['pdftoppm']
 
-    if format == "png":
+    if image_format.lower() == "png":
         command.extend(['-png'])
 
     if password is not None:
