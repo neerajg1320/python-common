@@ -82,6 +82,8 @@ def get_excel_file_extn():
 def get_json_file_extn():
     return ".json"
 
+def get_pdf_file_extn():
+    return ".pdf"
 
 def is_pdf(file_path):
     return get_extn(file_path).lower() == ".pdf"
