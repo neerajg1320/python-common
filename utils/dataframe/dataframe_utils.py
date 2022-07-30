@@ -82,7 +82,8 @@ def df_apply_regexlist_on_column(df, regex_list, column=None, new_anchor_column=
 
     match_df = None
     for index, regex_text in enumerate(regex_list):
-        logger.info("regex={}".format(regex_text))
+        if debug:
+            logger.info("regex={}".format(regex_text))
 
         if not column in df.columns:
             raise RuntimeError("column '{}' not found in columns: {}".format(column, df.columns))
