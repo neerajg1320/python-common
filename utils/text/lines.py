@@ -148,3 +148,9 @@ def combine_matches_with_post_groups(matches):
 
     return matches_combined
 
+
+def print_combined_matches(matches):
+    for m_idx,m in enumerate(matches):
+        print("match[{}]".format(m_idx))
+        for g_idx,g in enumerate(m['groups']):
+            print("group[{}:{}]:\n{}".format(g_idx, g['name'], g['text']))
