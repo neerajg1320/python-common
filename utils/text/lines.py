@@ -80,7 +80,7 @@ def get_multiline_post_para_offsets(matches, end_offset):
     return matches_post_para_with_offsets
 
 
-def get_matches_with_post_groups(input_str, matches_with_para):
+def get_matches_with_post_groups(input_str, matches_with_para, ignore_post_first=True):
     matches_with_post_groups = matches_with_para.copy()
 
     for m in matches_with_post_groups:
@@ -98,7 +98,7 @@ def get_matches_with_post_groups(input_str, matches_with_para):
         # Skip the first line and then carve the strings out of the second line onwards
         for index, line in enumerate(lines):
             # We assume the first line is remaining part of the matched line
-            if index == 0:
+            if ignore_post_first and index == 0:
                 continue
             if is_blank_line(line):
                 continue
