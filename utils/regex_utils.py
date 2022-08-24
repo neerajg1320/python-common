@@ -37,8 +37,8 @@ def regex_apply_on_text(regex_str, text, flags=None):
             matches.append({"match": match_object, "groups": groups_object})
             # matches.append([text[m.start():m.end()], m.start(), m.end()])
 
-
     return {"matches": matches, "error": regex_error}
+
 
 def get_group_offsets(text, match, groups_dict):
     groups = match.groups()
