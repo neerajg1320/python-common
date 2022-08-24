@@ -4,11 +4,12 @@ import pandas as pd
 import numpy as np
 import json
 import logging
+from collections import OrderedDict
 from utils.regex_utils import check_compile_regex
 from utils.debug_utils import print_file_function
 from utils.text.lines import get_multiline_post_para_offsets, get_matches_with_group_relative_offsets,\
     combine_matches_with_post_groups, print_combined_matches, print_matches_with_post_groups, \
-    extend_match_groups_with_post_groups, set_groups_absolute_offset, create_dataframe_from_matches
+    extend_match_groups_with_post_groups, set_groups_absolute_offset
 from utils.regex_utils import regex_apply_on_text
 
 
@@ -43,8 +44,24 @@ def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
     return df
 
 
-def create_dataframe_from_text_extrapolate(regex_str, input_str):
-    result = regex_apply_on_text(regex_str, input_str, flags={'multiline': True})
+def create_dataframe_from_matches(matches):
+    records = []
+    for m_idx,m in enumerate(matches):
+        print("match[{}]".format(m_idx))
+        rec = OrderedDict()
+        for g_idx,g in enumerate(m['groups']):
+            print("group[{}:{}]:\n{}\n{}".format(g_idx, g['name'], g['text'], g['offsets_list']))
+            rec[g['name']] = g['text']
+        records.append(rec)
+
+    # print(records)
+
+    df = pd.DataFrame(records)
+    return df
+
+
+def create_dataframe_from_text_extrapolate(regex_str, input_str, flags=None):
+    result = regex_apply_on_text(regex_str, input_str, flags=flags)
 
     matches = result['matches']
 
@@ -90,6 +107,7 @@ def df_apply_regex_on_column(df, regex_text, column=None):
     df[new_df.columns] = new_df
 
     return df
+
 
 # TBD: This is a major problem here.
 # We need to replace columns if all are nan

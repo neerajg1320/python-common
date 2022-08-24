@@ -2,8 +2,6 @@ import re
 import copy
 from collections import OrderedDict
 
-import pandas as pd
-
 
 def get_text_shape(text):
     text_shape = {"lines": OrderedDict()}
@@ -215,19 +213,3 @@ def print_combined_matches(matches):
         print("match[{}]".format(m_idx))
         for g_idx,g in enumerate(m['groups']):
             print("group[{}:{}]:\n{}\n{}".format(g_idx, g['name'], g['text'], g['offsets_list']))
-
-
-def create_dataframe_from_matches(matches):
-    records = []
-    for m_idx,m in enumerate(matches):
-        print("match[{}]".format(m_idx))
-        rec = OrderedDict()
-        for g_idx,g in enumerate(m['groups']):
-            print("group[{}:{}]:\n{}\n{}".format(g_idx, g['name'], g['text'], g['offsets_list']))
-            rec[g['name']] = g['text']
-        records.append(rec)
-
-    # print(records)
-
-    df = pd.DataFrame(records)
-    return df
