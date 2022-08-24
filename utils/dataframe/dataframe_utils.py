@@ -68,10 +68,12 @@ def create_dataframe_from_combined_matches(matches):
     return df
 
 
-def create_dataframe_from_text_extrapolate(regex_str, input_str, flags=None,
-                                           extrapolate=False,
-                                           extp_join_str="\n",
-                                           debug=False):
+# We do not use pandas series for dataframe extraction. This gives us more control.
+# Also we get the dataframe and the offsets
+def create_dataframe_from_text(regex_str, input_str, flags=None,
+                               extrapolate=False,
+                               extp_join_str="\n",
+                               debug=False):
     result = regex_apply_on_text(regex_str, input_str, flags=flags)
     matches = result['matches']
 

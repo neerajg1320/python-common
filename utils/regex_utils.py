@@ -29,7 +29,7 @@ def check_compile_regex(regex_str, flags=None):
     return pattern, error
 
 
-def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=False):
+def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=False, debug=False):
     result = regex_apply_on_text(regex_str, text, flags=flags)
 
     if extrapolate:
@@ -39,7 +39,8 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
         matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
         matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
 
-        logger.info("multiline_matches with absolute offsets:{}".format(matches_with_absolute_offsets))
+        if debug:
+            logger.info("multiline_matches with absolute offsets:{}".format(matches_with_absolute_offsets))
 
         result['matches'] = matches_with_absolute_offsets
 
