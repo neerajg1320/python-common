@@ -1,4 +1,5 @@
 import re
+import copy
 from collections import OrderedDict
 
 
@@ -60,7 +61,7 @@ def get_multiline_post_para_offsets(matches, end_offset):
         groups = m['groups']
         for index, g in enumerate(groups):
             # print('  group[{}]={}'.format(index, g))
-            g_rel = g.copy()
+            g_rel = copy.deepcopy(g)
             g_rel[1] -= full_match_start
             g_rel[2] -= full_match_start
             # print('  g_rel[{}]={}'.format(index, g_rel))
@@ -87,7 +88,7 @@ def get_multiline_post_para_offsets(matches, end_offset):
 def get_matches_with_group_relative_offsets(input_str, matches_with_para,
                                             ignore_post_first=True,
                                             blank_line_threshold=1):
-    matches_with_post_groups = matches_with_para.copy()
+    matches_with_post_groups = copy.deepcopy(matches_with_para)
 
     for m_idx,m in enumerate(matches_with_post_groups):
         # print(m)
@@ -131,7 +132,7 @@ def get_matches_with_group_relative_offsets(input_str, matches_with_para,
 
             groups_post_para = []
             for g in groups:
-                g_post_para = list(g.copy())
+                g_post_para = copy.deepcopy(g)
                 g_post_para[0] = line[g_post_para[1]:g_post_para[2]]
                 g_post_para[5] = buffer_start_offset_for_line
 
@@ -152,7 +153,7 @@ def print_matches_with_post_groups(matches):
 
 
 def set_groups_absolute_offset(matches):
-    matches_absolute = matches.copy()
+    matches_absolute = copy.deepcopy(matches)
 
     for m in matches_absolute:
         for g in m['groups']:
@@ -163,7 +164,7 @@ def set_groups_absolute_offset(matches):
 
 
 def extend_match_groups_with_post_groups(matches):
-    matches_extended = matches.copy()
+    matches_extended = copy.deepcopy(matches)
 
     for m in matches_extended:
         m_extended = {'groups': m['groups']}
@@ -213,3 +214,16 @@ def print_combined_matches(matches):
         print("match[{}]".format(m_idx))
         for g_idx,g in enumerate(m['groups']):
             print("group[{}:{}]:\n{}\n{}".format(g_idx, g['name'], g['text'], g['offsets_list']))
+
+
+def create_dataframe_from_matches(matches):
+    records = []
+    for m_idx,m in enumerate(matches):
+        print("match[{}]".format(m_idx))
+        rec = OrderedDict()
+        for g_idx,g in enumerate(m['groups']):
+            print("group[{}:{}]:\n{}\n{}".format(g_idx, g['name'], g['text'], g['offsets_list']))
+            rec[g['name']] = g['text']
+        records.append(rec)
+
+    print(records)
