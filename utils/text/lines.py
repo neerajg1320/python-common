@@ -1,7 +1,7 @@
 import re
 import copy
 from collections import OrderedDict
-from utils.regex_utils import regex_apply_on_text
+
 
 
 def get_text_shape(text):
@@ -96,6 +96,9 @@ def get_matches_with_group_relative_offsets(input_str, matches_with_para, ignore
         post_para_offsets = m['post_para']
         buffer_start_offset_for_post_para = post_para_offsets[0]
         post_para_str = input_str[buffer_start_offset_for_post_para:post_para_offsets[1]]
+
+        # Necessary to avoid circular import
+        from utils.regex_utils import regex_apply_on_text
 
         # We should not put \n in the pattern as the last line in buffer might not be having one
         line_matches = regex_apply_on_text("^.*$", post_para_str, flags={'multiline': True})['matches']

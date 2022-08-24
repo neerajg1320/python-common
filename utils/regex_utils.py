@@ -1,5 +1,12 @@
 import re
 from utils.exceptions import InvalidParams
+from utils.text.lines import get_multiline_post_para_offsets, get_matches_with_group_relative_offsets,\
+    combine_matches_with_post_groups, print_combined_matches, print_matches_with_post_groups, \
+    extend_match_groups_with_post_groups, set_groups_absolute_offset
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 # Ref:
@@ -22,6 +29,23 @@ def check_compile_regex(regex_str, flags=None):
     return pattern, error
 
 
+def regex_apply_on_text_extrapolate(regex_str, text, flags=None):
+    result = regex_apply_on_text(regex_str, text, flags=flags)
+
+    multiline_matches = get_multiline_post_para_offsets(result['matches'], len(text))
+    # logger.info("multiline_matches:{}".format(multiline_matches))
+
+    matches_with_post_groups = get_matches_with_group_relative_offsets(text, multiline_matches)
+    matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
+    matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
+
+    logger.info("multiline_matches with absolute offsets:{}".format(matches_with_absolute_offsets))
+
+    result['matches'] = matches_with_absolute_offsets
+
+    return result
+
+
 def regex_apply_on_text(regex_str, text, flags=None):
     pattern, regex_error = check_compile_regex(regex_str, flags=flags)
 
@@ -37,8 +61,8 @@ def regex_apply_on_text(regex_str, text, flags=None):
             matches.append({"match": match_object, "groups": groups_object})
             # matches.append([text[m.start():m.end()], m.start(), m.end()])
 
-
     return {"matches": matches, "error": regex_error}
+
 
 def get_group_offsets(text, match, groups_dict):
     groups = match.groups()
