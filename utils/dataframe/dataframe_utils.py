@@ -44,7 +44,7 @@ def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
     return df
 
 
-def create_dataframe_from_matches(matches):
+def create_dataframe_from_combined_matches(matches):
     records = []
     for m_idx,m in enumerate(matches):
         print("match[{}]".format(m_idx))
@@ -91,7 +91,7 @@ def create_dataframe_from_text_extrapolate(regex_str, input_str, flags=None, ext
 
     # print_combined_matches(matches_combined)
 
-    df = create_dataframe_from_matches(matches_combined)
+    df = create_dataframe_from_combined_matches(matches_combined)
     print(type(df))
     print(df)
 
