@@ -60,7 +60,7 @@ def create_dataframe_from_matches(matches):
     return df
 
 
-def create_dataframe_from_text_extrapolate(regex_str, input_str, flags=None):
+def create_dataframe_from_text_extrapolate(regex_str, input_str, flags=None, extrapolate=False, extp_join_str="\n"):
     result = regex_apply_on_text(regex_str, input_str, flags=flags)
 
     matches = result['matches']
@@ -82,13 +82,12 @@ def create_dataframe_from_text_extrapolate(regex_str, input_str, flags=None):
     for m in multiline_matches:
         print(m)
 
-
     matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
     print("Matches with Absolute Offset in Groups:")
     for m in multiline_matches:
         print(m)
 
-    matches_combined = combine_matches_with_post_groups(matches_with_post_groups)
+    matches_combined = combine_matches_with_post_groups(matches_with_post_groups, join_str=join_str)
 
     # print_combined_matches(matches_combined)
 

@@ -178,7 +178,7 @@ def extend_match_groups_with_post_groups(matches):
 
 # After combining: The offsets have not much meaning
 # we get a joined string along wit group name
-def combine_matches_with_post_groups(matches):
+def combine_matches_with_post_groups(matches, join_str="\n"):
     # print_matches_with_post_groups(matches)
     matches_combined = []
     for m in matches:
@@ -197,7 +197,7 @@ def combine_matches_with_post_groups(matches):
                 if c_group['name'] != pg[3]:
                     raise RuntimeError("The group name {} does not match post group name {}".format(c_group['name'], pg[3]))
 
-                c_group['text'] = "\n".join([c_group['text'], pg[0]])
+                c_group['text'] = join_str.join([c_group['text'], pg[0]])
                 c_group['offsets_list'].append([pg[1], pg[2]])
 
             m_combined['groups'].append(c_group)

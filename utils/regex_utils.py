@@ -29,19 +29,19 @@ def check_compile_regex(regex_str, flags=None):
     return pattern, error
 
 
-def regex_apply_on_text_extrapolate(regex_str, text, flags=None):
+def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=False):
     result = regex_apply_on_text(regex_str, text, flags=flags)
 
-    multiline_matches = get_multiline_post_para_offsets(result['matches'], len(text))
-    # logger.info("multiline_matches:{}".format(multiline_matches))
+    if extrapolate:
+        multiline_matches = get_multiline_post_para_offsets(result['matches'], len(text))
 
-    matches_with_post_groups = get_matches_with_group_relative_offsets(text, multiline_matches)
-    matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
-    matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
+        matches_with_post_groups = get_matches_with_group_relative_offsets(text, multiline_matches)
+        matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
+        matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
 
-    logger.info("multiline_matches with absolute offsets:{}".format(matches_with_absolute_offsets))
+        logger.info("multiline_matches with absolute offsets:{}".format(matches_with_absolute_offsets))
 
-    result['matches'] = matches_with_absolute_offsets
+        result['matches'] = matches_with_absolute_offsets
 
     return result
 
