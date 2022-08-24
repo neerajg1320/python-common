@@ -6,6 +6,10 @@ import json
 import logging
 from utils.regex_utils import check_compile_regex
 from utils.debug_utils import print_file_function
+from utils.text.lines import get_multiline_post_para_offsets, get_matches_with_group_relative_offsets,\
+    combine_matches_with_post_groups, print_combined_matches, print_matches_with_post_groups, \
+    extend_match_groups_with_post_groups, set_groups_absolute_offset, create_dataframe_from_matches
+from utils.regex_utils import regex_apply_on_text
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +39,45 @@ def create_df_from_text_using_regex(regex_text, input_file_text, flags=None):
     # Verify for later:
     # Drop level 0 as we are using the whole string and the level was create as we converted string to pd.Series
     df = df.droplevel(0)
+
+    return df
+
+
+def create_dataframe_from_text_extrapolate(regex_str, input_str):
+    result = regex_apply_on_text(regex_str, input_str, flags={'multiline': True})
+
+    matches = result['matches']
+
+    multiline_matches = get_multiline_post_para_offsets(matches, len(input_str))
+
+    print("Matches with post para")
+    for m in multiline_matches:
+        print(m)
+
+    matches_with_post_groups = get_matches_with_group_relative_offsets(input_str, multiline_matches)
+
+    # print_matches_with_post_groups(matches_with_post_groups)
+
+    # The extended groups are good for display for they loose the information required for combining
+    matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
+
+    print("Matches with Extended Groups:")
+    for m in multiline_matches:
+        print(m)
+
+
+    matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
+    print("Matches with Absolute Offset in Groups:")
+    for m in multiline_matches:
+        print(m)
+
+    matches_combined = combine_matches_with_post_groups(matches_with_post_groups)
+
+    # print_combined_matches(matches_combined)
+
+    df = create_dataframe_from_matches(matches_combined)
+    print(type(df))
+    print(df)
 
     return df
 

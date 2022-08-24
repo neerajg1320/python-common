@@ -2,6 +2,7 @@ import re
 import copy
 from collections import OrderedDict
 
+import pandas as pd
 
 
 def get_text_shape(text):
@@ -212,4 +213,7 @@ def create_dataframe_from_matches(matches):
             rec[g['name']] = g['text']
         records.append(rec)
 
-    print(records)
+    # print(records)
+
+    df = pd.DataFrame(records)
+    return df
