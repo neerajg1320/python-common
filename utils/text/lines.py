@@ -84,7 +84,9 @@ def get_multiline_post_para_offsets(matches, end_offset):
     return matches_post_para_with_offsets
 
 
-def get_matches_with_group_relative_offsets(input_str, matches_with_para, ignore_post_first=True):
+def get_matches_with_group_relative_offsets(input_str, matches_with_para,
+                                            ignore_post_first=True,
+                                            blank_line_threshold=1):
     matches_with_post_groups = matches_with_para.copy()
 
     for m_idx,m in enumerate(matches_with_post_groups):
@@ -105,6 +107,7 @@ def get_matches_with_group_relative_offsets(input_str, matches_with_para, ignore
         m['post_groups_list'] = []
 
         # Skip the first line and then carve the strings out of the second line onwards
+        blank_lines_count = 0
         for index, line_match in enumerate(line_matches):
             line = line_match['match'][0]
             post_para_start_offset_for_line = line_match['match'][1]
@@ -113,8 +116,19 @@ def get_matches_with_group_relative_offsets(input_str, matches_with_para, ignore
             # We assume the first line is remaining part of the matched line
             if ignore_post_first and index == 0:
                 continue
+
             if is_blank_line(line):
+                blank_lines_count += 1
+
+                # If blank_lines count exceeds acceptance threshold then we need to break
+                # This will happen on the last row in a para or on a page
+                if blank_lines_count > blank_line_threshold:
+                    break
+
                 continue
+            else:
+                blank_lines_count = 0
+
             groups_post_para = []
             for g in groups:
                 g_post_para = list(g.copy())
