@@ -1,5 +1,6 @@
 import re
 from collections import OrderedDict
+from utils.regex_utils import regex_apply_on_text
 
 
 def get_text_shape(text):
@@ -63,6 +64,9 @@ def get_multiline_post_para_offsets(matches, end_offset):
             g_rel[1] -= full_match_start
             g_rel[2] -= full_match_start
             # print('  g_rel[{}]={}'.format(index, g_rel))
+            g_rel.append(full_match_start)
+            g_rel.append(full_match_start) # This will be different in case of post_para groups
+
             m_rel_groups['groups'].append(g_rel)
 
         matches_post_para_with_offsets.append(m_rel_groups)
@@ -80,23 +84,29 @@ def get_multiline_post_para_offsets(matches, end_offset):
     return matches_post_para_with_offsets
 
 
-def get_matches_with_post_groups(input_str, matches_with_para, ignore_post_first=True):
+def get_matches_with_group_relative_offsets(input_str, matches_with_para, ignore_post_first=True):
     matches_with_post_groups = matches_with_para.copy()
 
-    for m in matches_with_post_groups:
+    for m_idx,m in enumerate(matches_with_post_groups):
         # print(m)
         groups = m['groups']
         # print(groups)
 
         post_para_offsets = m['post_para']
-        post_para_str = input_str[post_para_offsets[0]:post_para_offsets[1]]
-        # print(post_para_str)
-        lines = post_para_str.splitlines()
+        buffer_start_offset_for_post_para = post_para_offsets[0]
+        post_para_str = input_str[buffer_start_offset_for_post_para:post_para_offsets[1]]
+
+        # We should not put \n in the pattern as the last line in buffer might not be having one
+        line_matches = regex_apply_on_text("^.*$", post_para_str, flags={'multiline': True})['matches']
 
         m['post_groups_list'] = []
 
         # Skip the first line and then carve the strings out of the second line onwards
-        for index, line in enumerate(lines):
+        for index, line_match in enumerate(line_matches):
+            line = line_match['match'][0]
+            post_para_start_offset_for_line = line_match['match'][1]
+            buffer_start_offset_for_line = post_para_start_offset_for_line + buffer_start_offset_for_post_para
+
             # We assume the first line is remaining part of the matched line
             if ignore_post_first and index == 0:
                 continue
@@ -104,13 +114,15 @@ def get_matches_with_post_groups(input_str, matches_with_para, ignore_post_first
                 continue
             groups_post_para = []
             for g in groups:
-                g_post_para = g.copy()
+                g_post_para = list(g.copy())
                 g_post_para[0] = line[g_post_para[1]:g_post_para[2]]
+                g_post_para[5] = buffer_start_offset_for_line
+
                 groups_post_para.append(g_post_para)
+
             # print(groups_post_para)
             m['post_groups_list'].append(groups_post_para)
 
-        # print(m)
     return matches_with_post_groups
 
 
@@ -122,6 +134,31 @@ def print_matches_with_post_groups(matches):
             print('p_groups[{}]: {}'.format(pg_idx, p_grpups))
 
 
+def set_groups_absolute_offset(matches):
+    matches_absolute = matches.copy()
+
+    for m in matches_absolute:
+        for g in m['groups']:
+            g[1] += g[5]
+            g[2] += g[5]
+
+    return matches_absolute
+
+
+def extend_match_groups_with_post_groups(matches):
+    matches_extended = matches.copy()
+
+    for m in matches_extended:
+        m_extended = {'groups': m['groups']}
+
+        for post_groups in m['post_groups_list']:
+            m_extended['groups'].extend(post_groups)
+
+        # del m['post_groups_list']
+
+    return matches_extended
+
+
 # After combining: The offsets have not much meaning
 # we get a joined string along wit group name
 def combine_matches_with_post_groups(matches):
@@ -130,16 +167,21 @@ def combine_matches_with_post_groups(matches):
     for m in matches:
         m_combined = {'groups': []}
 
-        groups = m['groups']
-        for g_idx,group in enumerate(groups):
+        for g_idx,group in enumerate(m['groups']):
             c_group = {}
             c_group['text'] = group[0]
             c_group['name'] = group[3]
+            c_group['offsets_list'] = [[group[1], group[2]]]
 
             for post_groups in m['post_groups_list']:
                 # print(post_groups)
                 pg = post_groups[g_idx]
+
+                if c_group['name'] != pg[3]:
+                    raise RuntimeError("The group name {} does not match post group name {}".format(c_group['name'], pg[3]))
+
                 c_group['text'] = "\n".join([c_group['text'], pg[0]])
+                c_group['offsets_list'].append([pg[1], pg[2]])
 
             m_combined['groups'].append(c_group)
 
@@ -153,4 +195,4 @@ def print_combined_matches(matches):
     for m_idx,m in enumerate(matches):
         print("match[{}]".format(m_idx))
         for g_idx,g in enumerate(m['groups']):
-            print("group[{}:{}]:\n{}".format(g_idx, g['name'], g['text']))
+            print("group[{}:{}]:\n{}\n{}".format(g_idx, g['name'], g['text'], g['offsets_list']))
