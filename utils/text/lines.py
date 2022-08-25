@@ -191,19 +191,22 @@ def combine_matches_with_post_groups(matches, join_str="\n", add_blank_post_grou
             c_group['name'] = group[3]
             c_group['offsets_list'] = [[group[1], group[2]]]
 
-            for post_groups in m['post_groups_list']:
-                # print(post_groups)
-                pg = post_groups[g_idx]
+            group_name_parts = c_group['name'].split('__')
+            if len(group_name_parts) > 1:
+                if group_name_parts[1].upper() == "M":
+                    for post_groups in m['post_groups_list']:
+                        # print(post_groups)
+                        pg = post_groups[g_idx]
 
-                if c_group['name'] != pg[3]:
-                    raise RuntimeError("The group name {} does not match post group name {}".format(c_group['name'], pg[3]))
+                        if c_group['name'] != pg[3]:
+                            raise RuntimeError("The group name {} does not match post group name {}".format(c_group['name'], pg[3]))
 
-                if is_whitespace(pg[0]):
-                    if debug:
-                        print("Ignored:post group for '{}' is blank".format(c_group['name']))
-                else:
-                    c_group['text'] = join_str.join([c_group['text'], pg[0]])
-                    c_group['offsets_list'].append([pg[1], pg[2]])
+                        if is_whitespace(pg[0]):
+                            if debug:
+                                print("Ignored:post group for '{}' is blank".format(c_group['name']))
+                        else:
+                            c_group['text'] = join_str.join([c_group['text'], pg[0]])
+                            c_group['offsets_list'].append([pg[1], pg[2]])
 
             m_combined['groups'].append(c_group)
 
