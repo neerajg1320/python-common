@@ -94,7 +94,7 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
 
         matches_with_post_groups = get_matches_with_group_relative_offsets(input_str, multiline_matches)
 
-        if debug or True:
+        if debug:
             print("Matches with post groups")
             print_matches_with_post_groups(matches_with_post_groups)
 
