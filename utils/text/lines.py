@@ -176,8 +176,6 @@ def extend_match_groups_with_post_groups(matches):
         for post_groups in m['post_groups_list']:
             m_extended['groups'].extend(post_groups)
 
-        # del m['post_groups_list']
-
     return matches_extended
 
 

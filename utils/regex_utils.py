@@ -36,7 +36,19 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
         multiline_matches = get_multiline_post_para_offsets(result['matches'], len(text))
 
         matches_with_post_groups = get_matches_with_group_relative_offsets(text, multiline_matches)
+
+        if debug or True:
+            print("Matches with post groups")
+            for m in matches_with_post_groups:
+                print(m)
+
         matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
+
+        if debug or True:
+            print("Matches with extended groups")
+            for m in matches_with_extended_groups:
+                print(m)
+
         matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
 
         if debug:
