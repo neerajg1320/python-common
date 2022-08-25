@@ -35,7 +35,7 @@ def pad_lines(text, length, padding_char=' ', join_char="\n"):
     return buffer
 
 
-def is_blank_line(inp_str):
+def is_whitespace(inp_str):
     return re.match(r'^\s*$', inp_str) is not None
 
 
@@ -117,7 +117,7 @@ def get_matches_with_group_relative_offsets(input_str, matches_with_para,
             if ignore_post_first and index == 0:
                 continue
 
-            if is_blank_line(line):
+            if is_whitespace(line):
                 blank_lines_count += 1
 
                 # If blank_lines count exceeds acceptance threshold then we need to break
@@ -147,8 +147,9 @@ def print_matches_with_post_groups(matches):
     for index,m in enumerate(matches):
         print('match[{}]'.format(index))
         print('groups: {}'.format(m['groups']))
+        print('post_groups_list:')
         for pg_idx,p_grpups in enumerate(m['post_groups_list']):
-            print('p_groups[{}]: {}'.format(pg_idx, p_grpups))
+            print('  p_groups[{}]: {}'.format(pg_idx, p_grpups))
 
 
 def set_groups_absolute_offset(matches):
@@ -178,7 +179,7 @@ def extend_match_groups_with_post_groups(matches):
 
 # After combining: The offsets have not much meaning
 # we get a joined string along wit group name
-def combine_matches_with_post_groups(matches, join_str="\n"):
+def combine_matches_with_post_groups(matches, join_str="\n", add_blank_post_groups=False, debug=False):
     # print_matches_with_post_groups(matches)
     matches_combined = []
     for m in matches:
@@ -197,8 +198,12 @@ def combine_matches_with_post_groups(matches, join_str="\n"):
                 if c_group['name'] != pg[3]:
                     raise RuntimeError("The group name {} does not match post group name {}".format(c_group['name'], pg[3]))
 
-                c_group['text'] = join_str.join([c_group['text'], pg[0]])
-                c_group['offsets_list'].append([pg[1], pg[2]])
+                if is_whitespace(pg[0]):
+                    if debug:
+                        print("Ignored:post group for '{}' is blank".format(c_group['name']))
+                else:
+                    c_group['text'] = join_str.join([c_group['text'], pg[0]])
+                    c_group['offsets_list'].append([pg[1], pg[2]])
 
             m_combined['groups'].append(c_group)
 

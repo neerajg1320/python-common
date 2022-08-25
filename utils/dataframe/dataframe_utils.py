@@ -70,12 +70,17 @@ def create_dataframe_from_combined_matches(matches):
 
 # We do not use pandas series for dataframe extraction. This gives us more control.
 # Also we get the dataframe and the offsets
-def create_dataframe_from_text(regex_str, input_str, flags=None,
+def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
                                extrapolate=False,
                                extp_join_str="\n",
                                debug=False):
     result = regex_apply_on_text(regex_str, input_str, flags=flags)
     matches = result['matches']
+
+    if debug:
+        print("First Pass: matches")
+        for m in matches:
+            print(m)
 
     if not extrapolate:
         df = create_dataframe_from_matches(matches)
@@ -89,7 +94,9 @@ def create_dataframe_from_text(regex_str, input_str, flags=None,
 
         matches_with_post_groups = get_matches_with_group_relative_offsets(input_str, multiline_matches)
 
-        # print_matches_with_post_groups(matches_with_post_groups)
+        if debug:
+            print("Matches with post groups")
+            print_matches_with_post_groups(matches_with_post_groups)
 
         # The extended groups are good for display for they loose the information required for combining
         matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
@@ -105,14 +112,15 @@ def create_dataframe_from_text(regex_str, input_str, flags=None,
             for m in multiline_matches:
                 print(m)
 
-        matches_combined = combine_matches_with_post_groups(matches_with_post_groups, join_str=extp_join_str)
+        matches_combined = combine_matches_with_post_groups(matches_with_post_groups, join_str=extp_join_str, debug=debug)
 
         if debug:
             print_combined_matches(matches_combined)
 
         df = create_dataframe_from_combined_matches(matches_combined)
-        if debug:
-            print(df)
+
+    if debug:
+        print(df)
 
     return df
 
