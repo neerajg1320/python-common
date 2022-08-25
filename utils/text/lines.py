@@ -131,14 +131,18 @@ def get_matches_with_group_relative_offsets(input_str, matches_with_para,
 
             groups_post_para = []
             for g in groups:
-                g_post_para = copy.deepcopy(g)
-                g_post_para[0] = line[g_post_para[1]:g_post_para[2]]
-                g_post_para[5] = buffer_start_offset_for_line
+                g_name = g[3]
+                g_name_parts = g_name.split("__")
+                if len(g_name_parts) > 1 and g_name_parts[1].upper() == "M":
+                    g_post_para = copy.deepcopy(g)
+                    g_post_para[0] = line[g_post_para[1]:g_post_para[2]]
+                    g_post_para[5] = buffer_start_offset_for_line
 
-                groups_post_para.append(g_post_para)
+                    groups_post_para.append(g_post_para)
 
             # print(groups_post_para)
-            m['post_groups_list'].append(groups_post_para)
+            if len(groups_post_para) > 0:
+                m['post_groups_list'].append(groups_post_para)
 
     return matches_with_post_groups
 
@@ -185,33 +189,29 @@ def combine_matches_with_post_groups(matches, join_str="\n", add_blank_post_grou
     for m in matches:
         m_combined = {'groups': []}
 
+        groups_map ={}
         for g_idx,group in enumerate(m['groups']):
             c_group = {}
             c_group['text'] = group[0]
             c_group['name'] = group[3]
             c_group['offsets_list'] = [[group[1], group[2]]]
-
-            group_name_parts = c_group['name'].split('__')
-            if len(group_name_parts) > 1:
-                if group_name_parts[1].upper() == "M":
-                    for post_groups in m['post_groups_list']:
-                        # print(post_groups)
-                        pg = post_groups[g_idx]
-
-                        if c_group['name'] != pg[3]:
-                            raise RuntimeError("The group name {} does not match post group name {}".format(c_group['name'], pg[3]))
-
-                        if is_whitespace(pg[0]):
-                            if debug:
-                                print("Ignored:post group for '{}' is blank".format(c_group['name']))
-                        else:
-                            c_group['text'] = join_str.join([c_group['text'], pg[0]])
-                            c_group['offsets_list'].append([pg[1], pg[2]])
-
             m_combined['groups'].append(c_group)
 
+            groups_map[c_group['name']] = c_group
+
+        for post_groups in m['post_groups_list']:
+            # print(post_groups)
+            for pg in post_groups:
+                c_group = groups_map[pg[3]]
+
+                if is_whitespace(pg[0]):
+                    if debug:
+                        print("Ignored:post group for '{}' is blank".format(c_group['name']))
+                else:
+                    c_group['text'] = join_str.join([c_group['text'], pg[0]])
+                    c_group['offsets_list'].append([pg[1], pg[2]])
+
         matches_combined.append(m_combined)
-        # print(m_combined)
 
     return matches_combined
 

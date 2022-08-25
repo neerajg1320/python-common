@@ -94,7 +94,7 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
 
         matches_with_post_groups = get_matches_with_group_relative_offsets(input_str, multiline_matches)
 
-        if debug:
+        if debug or True:
             print("Matches with post groups")
             print_matches_with_post_groups(matches_with_post_groups)
 
@@ -123,14 +123,6 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
 
     if debug:
         print(df)
-
-    # Temp: Added for behaviour analysis
-    # df['TransactionDate'] = df['TransactionDate'].str.replace(" ", "?")
-    # df['TransactionDate'] = df['TransactionDate'].str.replace("\t", "!")
-    # df['TransactionDate'] = df['TransactionDate'].str.replace("\n", ":")
-    #
-    # df['Credit'] = df['Credit'].str.replace(" ", "?")
-    # df['Debit'] = df['Debit'].str.replace(" ", "?")
 
     return df
 
