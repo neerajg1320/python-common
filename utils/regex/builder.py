@@ -106,7 +106,7 @@ class CombineOperator(Enum):
 
 
 class CompositeToken(AbsRegexToken):
-    def __init__(self, *args, operator=CombineOperator.AND):
+    def __init__(self, *args, operator=CombineOperator.OR):
         self.tokens = []
 
         if not isinstance(operator, CombineOperator):
@@ -131,7 +131,7 @@ class CompositeToken(AbsRegexToken):
         for index, token in enumerate(self.tokens):
             regexes.append(token.regex_str())
         operator_str = self.operator.value["str"]
-        return "|".join(regexes)
+        return operator_str.join(regexes)
 
 
 class NamedToken(AbsRegexToken):
@@ -166,3 +166,6 @@ class RegexBuilder:
 
     def pop_token(self):
         self.tokens.pop()
+
+    def create(self):
+        return "".join(map(lambda tkn: tkn.regex_str(), self.tokens))
