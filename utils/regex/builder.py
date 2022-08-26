@@ -1,6 +1,8 @@
+import re
 from enum import Enum
 from .wildcard import get_wildcard_str
 from .patterns import is_regex_comment_pattern, get_regex_comment_pattern
+from utils.regex_utils import regex_apply_on_text, regex_pattern_apply_on_text
 
 
 class Alignment(Enum):
@@ -190,3 +192,34 @@ class RegexBuilder(AbsRegex):
 
     def create(self, new_line=False):
         return self.regex_str(new_line=new_line)
+
+    def apply(self, text):
+        # TBD: Can be made as a routine
+        result = regex_apply_on_text('^.*$\n', text, flags={"multiline": 1})
+        lines_with_offsets = result["matches"]
+
+        regex_str = self.create()
+        pattern = re.compile(regex_str)
+
+        extract_matching_lines = False
+        match_line_wise = True
+
+        if extract_matching_lines:
+            matches = regex_pattern_apply_on_text(pattern, text)
+            for m in matches:
+                print(m)
+
+        if match_line_wise:
+            for lnum, line in enumerate(lines_with_offsets):
+                line_text = line['match'][0]
+                line_start_offset = line['match'][1]
+                line_end_offset = line['match'][2]
+
+                match_full_and_groups = regex_pattern_apply_on_text(pattern, line_text)
+                # print(match_full_and_groups)
+
+                if len(match_full_and_groups) > 0:
+                    first_match = match_full_and_groups[0]
+                    print("{}:{}".format(lnum, line_text), end="")
+                    print("groups:{}\n".format(first_match['groups']))
+

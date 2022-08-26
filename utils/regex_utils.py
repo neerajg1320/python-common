@@ -62,19 +62,22 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
 def regex_apply_on_text(regex_str, text, flags=None):
     pattern, regex_error = check_compile_regex(regex_str, flags=flags)
 
-    # debug_log("groups_dict=", groups_dict)
-
-    matches = []
     if not regex_error:
-        groups_dict = dict(pattern.groupindex)
-        for m in pattern.finditer(text):
-            # debug_log("m.groups()=", m.groups())
-            match_object = [text[m.start():m.end()], m.start(), m.end()]
-            groups_object = get_group_offsets(text, m, groups_dict)
-            matches.append({"match": match_object, "groups": groups_object})
-            # matches.append([text[m.start():m.end()], m.start(), m.end()])
+        matches = regex_pattern_apply_on_text(pattern, text)
 
     return {"matches": matches, "error": regex_error}
+
+
+def regex_pattern_apply_on_text(regex_pattern, text):
+    groups_dict = dict(regex_pattern.groupindex)
+
+    matches = []
+    for m in regex_pattern.finditer(text):
+        match_object = [text[m.start():m.end()], m.start(), m.end()]
+        groups_object = get_group_offsets(text, m, groups_dict)
+        matches.append({"match": match_object, "groups": groups_object})
+
+    return matches
 
 
 def get_group_offsets(text, match, groups_dict):

@@ -1,7 +1,7 @@
 from .builder import Token, RegexToken, CompositeToken, NamedToken, RegexBuilder
 
 
-def create_sample_hdfc_regex(debug=False):
+def create_sample_hdfc_builder(debug=False):
     regex_builder = RegexBuilder()
 
     regex_builder.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "TransactionDate"))
@@ -31,4 +31,4 @@ def create_sample_hdfc_regex(debug=False):
         print("Regex Builder:")
         print(regex_builder)
 
-    return regex_builder.create(new_line=True)
+    return regex_builder
