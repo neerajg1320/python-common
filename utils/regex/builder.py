@@ -79,9 +79,11 @@ class RegexToken:
 
     # TBD: Check how should we handle the case where min_len=0 and max_len=0 as well.
     def regex_str(self):
-        wildcard_str = get_wildcard_str(self.min_len, self.max_len)
+        token_regex_str = self.pattern_str
 
-        token_regex_str = "{}{}".format(self.pattern_str, wildcard_str)
+        if self.wildcard:
+            wildcard_str = get_wildcard_str(self.min_len, self.max_len)
+            token_regex_str = "{}{}".format(self.pattern_str, wildcard_str)
 
         if self.capture:
             if self.capture_name is not None and self.capture_name != "":
