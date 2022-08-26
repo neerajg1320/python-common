@@ -152,6 +152,8 @@ class NamedToken(AbsRegexToken):
 
 
 class RegexBuilder:
+    default_token_join_str = ""
+
     def __init__(self):
         self.tokens = []
 
@@ -164,5 +166,14 @@ class RegexBuilder:
     def pop_token(self):
         self.tokens.pop()
 
-    def create(self):
-        return "".join(map(lambda tkn: tkn.regex_str(), self.tokens))
+    def create(self, new_line=False, token_join_str=None):
+        join_str = self.default_token_join_str
+
+        if new_line:
+            join_str = "(?#\n)"
+
+        if token_join_str is not None:
+            if not isinstance(token_join_str, str):
+                raise RuntimeError("token_join_str must be a string")
+
+        return join_str.join(map(lambda tkn: tkn.regex_str(), self.tokens))
