@@ -210,18 +210,25 @@ class RegexBuilder(AbsRegex):
                 print(m)
 
         if match_line_wise:
+            match_count = 0
             for lnum, line in enumerate(lines_with_offsets):
                 line_text = line['match'][0]
                 line_start_offset = line['match'][1]
                 line_end_offset = line['match'][2]
 
                 match_full_and_groups = regex_pattern_apply_on_text(pattern, line_text)
-                # print(match_full_and_groups)
 
                 if len(match_full_and_groups) > 0:
+                    match_count += 1
                     first_match = match_full_and_groups[0]
-                    print("{}:{}".format(lnum, line_text), end="")
+                    print("{:>4}:line_num={}".format(match_count, lnum))
+                    print("{}".format(line_text), end="")
+
+                    # We have to use this loop to generate the mask regex
                     for g_idx, group in enumerate(first_match['groups']):
                         print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
-                    print()
 
+                    print()
+                    # Added just for unit testing
+                    if match_count > 2:
+                        break
