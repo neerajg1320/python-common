@@ -19,9 +19,12 @@ class Token(Enum):
     WHITESPACE = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True}
 
 
-class RegexToken:
-    default_wildcard_str = "*"
+class AbsRegexToken:
+    def regex_str(self):
+        raise RuntimeError("Method has to be specified in subclass")
 
+
+class RegexToken(AbsRegexToken):
     def __init__(self, token=None, pattern_str=None, min_len=None, max_len=None,
                  capture=False, capture_name=None,
                  value_type=None, value_format=None,
@@ -77,6 +80,9 @@ class RegexToken:
 
         self.join_str = join_str
 
+    def __str__(self):
+        return "(r'{}', {}, {})".format(self.pattern_str, self.min_len, self.max_len)
+
     # TBD: Check how should we handle the case where min_len=0 and max_len=0 as well.
     def regex_str(self):
         token_regex_str = self.pattern_str
@@ -93,8 +99,56 @@ class RegexToken:
 
         return token_regex_str
 
+
+class CombineOperator(Enum):
+    AND = {"str": ""}
+    OR = {"str": "|"}
+
+
+class CompositeToken(AbsRegexToken):
+    def __init__(self, *args, operator=CombineOperator.AND):
+        self.tokens = []
+
+        if not isinstance(operator, CombineOperator):
+            raise RuntimeError("operator must be an instance of {}".format(CombineOperator.__name__))
+
+        self.operator = operator
+
+        for arg in args:
+            if not isinstance(arg, AbsRegexToken):
+                raise RuntimeError("arg '{}'[{}] is not of type {}".format(arg, type(arg), AbsRegexToken.__name__))
+
+            self.tokens.append(arg)
+
     def __str__(self):
-        return "(r'{}', {}, {})".format(self.pattern_str, self.min_len, self.max_len)
+        lines = []
+        for index, token in enumerate(self.tokens):
+            lines.append("token[{}]:{}".format(index, token))
+        return "\n".join(lines)
+
+    def regex_str(self):
+        regexes = []
+        for index, token in enumerate(self.tokens):
+            regexes.append(token.regex_str())
+        operator_str = self.operator.value["str"]
+        return "|".join(regexes)
+
+
+class NamedToken(AbsRegexToken):
+    def __init__(self, token, name):
+        if not isinstance(token, AbsRegexToken):
+            raise RuntimeError("token must be an instance of {}".format(AbsRegexToken.__name__))
+        self.token = token
+
+        if not isinstance(name, str):
+            raise RuntimeError("name must be string")
+        self.name = name
+
+    def __str__(self):
+        return "{}:{}".format(self.name, self.token)
+
+    def regex_str(self):
+        return "(?P<{}>{})".format(self.name, self.token.regex_str())
 
 
 class RegexBuilder:
