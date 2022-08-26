@@ -20,12 +20,12 @@ class Token(Enum):
     WHITESPACE = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True}
 
 
-class AbsRegexToken:
+class AbsRegex:
     def regex_str(self):
         raise RuntimeError("Method has to be specified in subclass")
 
 
-class RegexToken(AbsRegexToken):
+class RegexToken(AbsRegex):
     def __init__(self, token=None, pattern_str=None, min_len=None, max_len=None,
                  capture=False, capture_name=None,
                  value_type=None, value_format=None,
@@ -106,7 +106,7 @@ class CombineOperator(Enum):
     OR = {"str": "|"}
 
 
-class CompositeToken(AbsRegexToken):
+class CompositeToken(AbsRegex):
     def __init__(self, *args, operator=CombineOperator.OR):
         self.tokens = []
 
@@ -116,8 +116,8 @@ class CompositeToken(AbsRegexToken):
         self.operator = operator
 
         for arg in args:
-            if not isinstance(arg, AbsRegexToken):
-                raise RuntimeError("arg '{}'[{}] is not of type {}".format(arg, type(arg), AbsRegexToken.__name__))
+            if not isinstance(arg, AbsRegex):
+                raise RuntimeError("arg '{}'[{}] is not of type {}".format(arg, type(arg), AbsRegex.__name__))
 
             self.tokens.append(arg)
 
@@ -135,10 +135,10 @@ class CompositeToken(AbsRegexToken):
         return operator_str.join(regexes)
 
 
-class NamedToken(AbsRegexToken):
+class NamedToken(AbsRegex):
     def __init__(self, token, name):
-        if not isinstance(token, AbsRegexToken):
-            raise RuntimeError("token must be an instance of {}".format(AbsRegexToken.__name__))
+        if not isinstance(token, AbsRegex):
+            raise RuntimeError("token must be an instance of {}".format(AbsRegex.__name__))
         self.token = token
 
         if not isinstance(name, str):
@@ -152,7 +152,7 @@ class NamedToken(AbsRegexToken):
         return "(?P<{}>{})".format(self.name, self.token.regex_str())
 
 
-class RegexBuilder:
+class RegexBuilder(AbsRegex):
     default_token_join_str = ""
 
     def __init__(self):
@@ -167,7 +167,7 @@ class RegexBuilder:
     def pop_token(self):
         self.tokens.pop()
 
-    def create(self, new_line=False, token_join_str=None):
+    def regex_str(self, new_line=False, token_join_str=None):
         join_str = self.default_token_join_str
 
         if new_line:
@@ -187,3 +187,6 @@ class RegexBuilder:
             join_str = token_join_str
 
         return join_str.join(map(lambda tkn: tkn.regex_str(), self.tokens))
+
+    def create(self, new_line=False):
+        return self.regex_str(new_line=new_line)
