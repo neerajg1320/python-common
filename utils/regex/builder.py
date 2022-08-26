@@ -156,10 +156,7 @@ class RegexBuilder:
         self.tokens = []
 
     def __str__(self):
-        for token in self.tokens:
-            print(token)
-
-        return "".join(map(lambda tkn: tkn.regex_str(), self.tokens))
+        return "\n".join(map(lambda x: str(x), self.tokens))
 
     def push_token(self, token):
         self.tokens.append(token)
