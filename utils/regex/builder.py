@@ -221,5 +221,7 @@ class RegexBuilder(AbsRegex):
                 if len(match_full_and_groups) > 0:
                     first_match = match_full_and_groups[0]
                     print("{}:{}".format(lnum, line_text), end="")
-                    print("groups:{}\n".format(first_match['groups']))
+                    for g_idx, group in enumerate(first_match['groups']):
+                        print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
+                    print()
 
