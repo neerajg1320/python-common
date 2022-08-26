@@ -25,11 +25,10 @@ def create_sample_hdfc_regex(debug=False):
     regex_builder.push_token(credit_token_optional)
 
     regex_builder.push_token(RegexToken(token=Token.WHITESPACE, min_len=15, max_len=30))
-
     regex_builder.push_token(NamedToken(RegexToken(token=Token.NUMBER, min_len=1, max_len=20), "Balance"))
 
     if debug:
         print("Regex Builder:")
         print(regex_builder)
 
-    return regex_builder.create(token_join_str="(?# \nabc )")
+    return regex_builder.create(new_line=True)
