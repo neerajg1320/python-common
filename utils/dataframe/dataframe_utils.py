@@ -112,7 +112,9 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
             for m in multiline_matches:
                 print(m)
 
-        matches_combined = combine_matches_with_post_groups(matches_with_post_groups, join_str=extp_join_str, debug=debug)
+        matches_combined = combine_matches_with_post_groups(matches_with_post_groups,
+                                                            join_str=extp_join_str,
+                                                            debug=False)
 
         if debug:
             print_combined_matches(matches_combined)
