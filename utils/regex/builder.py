@@ -1,5 +1,6 @@
 from enum import Enum
 from .wildcard import get_wildcard_str
+from .patterns import is_regex_comment_pattern, get_regex_comment_pattern
 
 
 class Alignment(Enum):
@@ -175,5 +176,14 @@ class RegexBuilder:
         if token_join_str is not None:
             if not isinstance(token_join_str, str):
                 raise RuntimeError("token_join_str must be a string")
+
+            if not is_regex_comment_pattern(token_join_str):
+                raise RuntimeError("token_join_str must be a valid Regex Comment Format '{}'".format(
+                    get_regex_comment_pattern()
+                ))
+
+            # print("'{}' valid join str: {}".format(token_join_str, ))
+
+            join_str = token_join_str
 
         return join_str.join(map(lambda tkn: tkn.regex_str(), self.tokens))

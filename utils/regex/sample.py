@@ -32,4 +32,4 @@ def create_sample_hdfc_regex(debug=False):
         print("Regex Builder:")
         print(regex_builder)
 
-    return regex_builder.create()
+    return regex_builder.create(token_join_str="(?# \nabc )")
