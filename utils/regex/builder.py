@@ -19,7 +19,9 @@ class Token(Enum):
     NUMBER = {"pattern_str": r"(?:\d[,.\d]*)?\d", "min_len": 1, "max_len": None, "wildcard": False}
     WORD = {"pattern_str": r"\S+", "min_len": 1, "max_len": None, "wildcard": False}
     PHRASE = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False}
-    WHITESPACE = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True}
+    WHITESPACE_ANY = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True}
+    WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True}
+    ANY_CHAR = {"pattern_str": r".", "min_len": 1, "max_len": None, "wildcard": True}
 
 
 class AbsRegex:
@@ -28,7 +30,8 @@ class AbsRegex:
 
 
 class RegexToken(AbsRegex):
-    def __init__(self, token=None, pattern_str=None, min_len=None, max_len=None,
+    def __init__(self, token=None, pattern_str=None,
+                 min_len=None, max_len=None, len=None,
                  capture=False, capture_name=None,
                  value_type=None, value_format=None,
                  wildcard=None,
@@ -54,6 +57,10 @@ class RegexToken(AbsRegex):
         # If both are defined then pattern_str overrides the pattern_str of token
         if pattern_str is not None:
             self.pattern_str = pattern_str
+
+        if len is not None:
+            self.min_len = len
+            self.max_len = len
 
         if min_len is not None:
             self.min_len = min_len
@@ -193,7 +200,8 @@ class RegexBuilder(AbsRegex):
     def create(self, new_line=False):
         return self.regex_str(new_line=new_line)
 
-    def apply(self, text):
+    # Our last whitespace token contains the match for \n as well
+    def match_with_token_mask(self, text):
         # TBD: Can be made as a routine
         result = regex_apply_on_text('^.*$\n', text, flags={"multiline": 1})
         lines_with_offsets = result["matches"]
@@ -211,24 +219,58 @@ class RegexBuilder(AbsRegex):
 
         if match_line_wise:
             match_count = 0
-            for lnum, line in enumerate(lines_with_offsets):
-                line_text = line['match'][0]
-                line_start_offset = line['match'][1]
-                line_end_offset = line['match'][2]
+            
+            for line_num, line in enumerate(lines_with_offsets):
+                match_text = line['match'][0]
+                match_start_offset = line['match'][1]
+                match_end_offset = line['match'][2]
 
-                match_full_and_groups = regex_pattern_apply_on_text(pattern, line_text)
+                # Line start offset is currently equal to match start offset
+                # Line end offset is currently equal to match end offset
+                # as we assume that our pattern matches begin at a line start and end at line end
+                line_start_offset = match_start_offset
+
+                match_full_and_groups = regex_pattern_apply_on_text(pattern, match_text)
+
+                token_masks = []
 
                 if len(match_full_and_groups) > 0:
                     match_count += 1
-                    first_match = match_full_and_groups[0]
-                    print("{:>4}:line_num={}".format(match_count, lnum))
-                    print("{}".format(line_text), end="")
 
-                    # We have to use this loop to generate the mask regex
+                    first_match = match_full_and_groups[0]
+                    print("{:>4}:line_num={}".format(match_count, line_num))
+                    print("{}".format(match_text), end="")
+
+                    mask_regex_builder = RegexBuilder()
+
+                    # First token_mask
+                    whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
+                    token_masks.append(whitespace_token_mask)
                     for g_idx, group in enumerate(first_match['groups']):
                         print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
+                        whitespace_token_mask[2] = group[1]
+                        mask_regex_builder.push_token(
+                            RegexToken(Token.WHITESPACE_ANY, len=whitespace_token_mask[2] - whitespace_token_mask[1])
+                        )
 
-                    print()
-                    # Added just for unit testing
-                    if match_count > 2:
-                        break
+                        token_mask = [r'.', group[1], group[2], group[3]]
+                        token_masks.append(token_mask)
+                        mask_regex_builder.push_token(
+                            NamedToken(RegexToken(Token.ANY_CHAR, len=token_mask[2] - token_mask[1]), token_mask[3])
+                        )
+
+                        whitespace_token_mask = [r'\s', group[2], -1, '']
+                        token_masks.append(whitespace_token_mask)
+
+                    # Last token mask
+                    whitespace_token_mask[2] = match_end_offset - match_start_offset
+                    mask_regex_builder.push_token(
+                        RegexToken(Token.WHITESPACE_ANY, len=whitespace_token_mask[2] - whitespace_token_mask[1])
+                    )
+
+                    print("Token_masks:\n{}\n".format(token_masks))
+                    print("Mask Regex: {}".format(mask_regex_builder.create()))
+
+                # Added just for unit testing
+                if match_count > 1:
+                    break
