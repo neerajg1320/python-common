@@ -210,7 +210,7 @@ class RegexBuilder(AbsRegex):
         return self.regex_str(token_lines=token_lines)
 
     # Our last whitespace token contains the match for \n as well
-    def match_with_token_mask(self, text):
+    def match_with_token_mask(self, text, debug=False):
         # TBD: Can be made as a routine
         # We leave the \n out of the match even though we match the whole line
         result = regex_apply_on_text('^.*$', text, flags={"multiline": 1})
@@ -248,8 +248,9 @@ class RegexBuilder(AbsRegex):
                     match_count += 1
 
                     first_match = match_full_and_groups[0]
-                    print("{:>4}:line_num={}".format(match_count, line_num))
-                    print("{}".format(match_text), end="")
+                    if debug:
+                        print("{:>4}:line_num={}".format(match_count, line_num))
+                        print("{}".format(match_text), end="")
 
                     mask_regex_builder = RegexBuilder(flag_full_line=self.flag_full_line)
 
@@ -257,7 +258,9 @@ class RegexBuilder(AbsRegex):
                     whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
                     token_masks.append(whitespace_token_mask)
                     for g_idx, group in enumerate(first_match['groups']):
-                        print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
+                        if debug:
+                            print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
+
                         whitespace_token_mask[2] = group[1]
                         mask_regex_builder.push_token(
                             RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
@@ -278,9 +281,10 @@ class RegexBuilder(AbsRegex):
                         RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
-                    print("Token_masks:\n{}".format(token_masks))
-                    print("Mask Regex:\n{}".format(mask_regex_builder.create(token_lines=True)))
-                    print()
+                    if debug:
+                        print("Token_masks:\n{}".format(token_masks))
+                        print("Mask Regex:\n{}".format(mask_regex_builder.create(token_lines=True)))
+                        print()
 
                 # Added just for unit testing
                 if match_count > 1:
