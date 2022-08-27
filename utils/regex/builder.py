@@ -164,8 +164,9 @@ class NamedToken(AbsRegex):
 class RegexBuilder(AbsRegex):
     default_token_join_str = ""
 
-    def __init__(self):
+    def __init__(self, flag_full_line=False):
         self.tokens = []
+        self.is_full_fine = flag_full_line
 
     def __str__(self):
         return "\n".join(map(lambda x: str(x), self.tokens))
@@ -175,6 +176,9 @@ class RegexBuilder(AbsRegex):
 
     def pop_token(self):
         self.tokens.pop()
+
+    def set_full_line(self, flag_full_line):
+        self.is_full_fine = flag_full_line
 
     def regex_str(self, new_line=False, token_join_str=None):
         join_str = self.default_token_join_str
@@ -195,7 +199,12 @@ class RegexBuilder(AbsRegex):
 
             join_str = token_join_str
 
-        return join_str.join(map(lambda tkn: tkn.regex_str(), self.tokens))
+        tokens_regex_str = join_str.join(map(lambda tkn: tkn.regex_str(), self.tokens))
+
+        if self.is_full_fine:
+            tokens_regex_str = "^{}$".format(tokens_regex_str)
+
+        return tokens_regex_str
 
     def create(self, new_line=False):
         return self.regex_str(new_line=new_line)
@@ -203,7 +212,8 @@ class RegexBuilder(AbsRegex):
     # Our last whitespace token contains the match for \n as well
     def match_with_token_mask(self, text):
         # TBD: Can be made as a routine
-        result = regex_apply_on_text('^.*$\n', text, flags={"multiline": 1})
+        # We leave the \n out of the match even though we match the whole line
+        result = regex_apply_on_text('^.*$', text, flags={"multiline": 1})
         lines_with_offsets = result["matches"]
 
         regex_str = self.create()
@@ -250,7 +260,7 @@ class RegexBuilder(AbsRegex):
                         print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
                         whitespace_token_mask[2] = group[1]
                         mask_regex_builder.push_token(
-                            RegexToken(Token.WHITESPACE_ANY, len=whitespace_token_mask[2] - whitespace_token_mask[1])
+                            RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                         )
 
                         token_mask = [r'.', group[1], group[2], group[3]]
@@ -265,11 +275,12 @@ class RegexBuilder(AbsRegex):
                     # Last token mask
                     whitespace_token_mask[2] = match_end_offset - match_start_offset
                     mask_regex_builder.push_token(
-                        RegexToken(Token.WHITESPACE_ANY, len=whitespace_token_mask[2] - whitespace_token_mask[1])
+                        RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
-                    print("Token_masks:\n{}\n".format(token_masks))
-                    print("Mask Regex: {}".format(mask_regex_builder.create()))
+                    print("Token_masks:\n{}".format(token_masks))
+                    print("Mask Regex:\n{}".format(mask_regex_builder.create(new_line=True)))
+                    print()
 
                 # Added just for unit testing
                 if match_count > 1:

@@ -13,8 +13,10 @@ def create_sample_hdfc_builder(debug=False):
     regex_builder.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "ValueDate"))
     regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=20, max_len=34))
 
+    # To be used in Debit and Credit where the value is blank as only one of Credit or Debut is specified
+    blank_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, len=1)
+
     debit_token = RegexToken(token=Token.NUMBER, min_len=1, max_len=20)
-    blank_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=3, max_len=3)
     debit_token_optional = NamedToken(CompositeToken(debit_token, blank_token), "Debit")
     regex_builder.push_token(debit_token_optional)
 
