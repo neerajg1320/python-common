@@ -172,6 +172,19 @@ class NamedToken(AbsRegex):
     def __str__(self):
         return "{}:{}".format(self.name, self.token)
 
+    @property
+    def min_len(self):
+        """Minimum Occurrences of the token"""
+        return self.token.min_len
+
+    @min_len.setter
+    def set_min_len(self, len):
+        self.token.min_len = len
+
+    @min_len.deleter
+    def del_min_len(self):
+        pass
+
     def regex_str(self):
         return "(?P<{}>{})".format(self.name, self.token.regex_str())
 
