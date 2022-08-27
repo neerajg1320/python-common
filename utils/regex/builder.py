@@ -47,6 +47,8 @@ class RegexToken(AbsRegex):
             if not isinstance(token, Token):
                 raise RuntimeError("token must be an instance of enum Token")
             else:
+                self.token = token
+
                 self.pattern_str = token.value['pattern_str']
                 if token.value['min_len'] is not None:
                     self._min_len = token.value['min_len']
@@ -106,7 +108,10 @@ class RegexToken(AbsRegex):
     def del_min_len(self):
         del self._min_len
 
-    # min_len = property(get_min_len, set_min_len, del_min_len)
+    @property
+    def token_type(self):
+        """Type of RegexToken like DATE, NUMBER etc"""
+        return self.token
 
     # TBD: Check how should we handle the case where min_len=0 and max_len=0 as well.
     def regex_str(self):
@@ -163,37 +168,42 @@ class NamedToken(AbsRegex):
     def __init__(self, token, name):
         if not isinstance(token, AbsRegex):
             raise RuntimeError("token must be an instance of {}".format(AbsRegex.__name__))
-        self.token = token
+        self.regex_token = token
 
         if not isinstance(name, str):
             raise RuntimeError("name must be string")
         self.name = name
 
     def __str__(self):
-        return "{}:{}".format(self.name, self.token)
+        return "{}:{}".format(self.name, self.regex_token)
 
     @property
     def min_len(self):
         """Minimum Occurrences of the token"""
-        return self.token.min_len
+        return self.regex_token.min_len
 
     @min_len.setter
     def set_min_len(self, len):
-        self.token.min_len = len
+        self.regex_token.min_len = len
 
     @min_len.deleter
     def del_min_len(self):
         pass
 
+    @property
+    def token_type(self):
+        """Type of RegexToken like DATE, NUMBER etc"""
+        return self.regex_token.token
+
     def regex_str(self):
-        return "(?P<{}>{})".format(self.name, self.token.regex_str())
+        return "(?P<{}>{})".format(self.name, self.regex_token.regex_str())
 
 
 class RegexBuilder(AbsRegex):
     default_token_join_str = ""
 
     def __init__(self, flag_full_line=False):
-        self.tokens = []
+        self.tokens : RegexToken = []
         self.flag_full_line = flag_full_line
 
     def __str__(self):
@@ -237,14 +247,27 @@ class RegexBuilder(AbsRegex):
     def create(self, token_lines=False):
         return self.regex_str(token_lines=token_lines)
 
-    def mask(self, mask_strategy="min", mask_char="x"):
-        for token in self.tokens:
+    def mask_str(self, mask_strategy="min", fill_char="x", whitespace_char=" ", debug=False):
+        mask_buffer = ""
+        for regex_token in self.tokens:
             if mask_strategy == "min":
                 try:
-                    print(type(token), token, token.min_len)
+                    if debug:
+                        print(regex_token.token_type, type(regex_token), regex_token, regex_token.min_len)
+
+                    token_mask_len = regex_token.min_len
+
+                    if regex_token.token_type == Token.WHITESPACE_HORIZONTAL:
+                        token_char = whitespace_char
+                    else:
+                        token_char = fill_char
+
+                    token_mask_str = token_char * token_mask_len
+                    mask_buffer = "".join([mask_buffer, token_mask_str])
                 except AttributeError as e:
                     print(e)
-        return "Under Process"
+
+        return mask_buffer
 
     # Our last whitespace token contains the match for \n as well
     def get_matches_with_token_mask_builder(self, text, debug=False):
