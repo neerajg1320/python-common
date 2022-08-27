@@ -166,7 +166,7 @@ class RegexBuilder(AbsRegex):
 
     def __init__(self, flag_full_line=False):
         self.tokens = []
-        self.is_full_fine = flag_full_line
+        self.flag_full_line = flag_full_line
 
     def __str__(self):
         return "\n".join(map(lambda x: str(x), self.tokens))
@@ -178,12 +178,12 @@ class RegexBuilder(AbsRegex):
         self.tokens.pop()
 
     def set_full_line(self, flag_full_line):
-        self.is_full_fine = flag_full_line
+        self.flag_full_line = flag_full_line
 
-    def regex_str(self, new_line=False, token_join_str=None):
+    def regex_str(self, token_lines=False, token_join_str=None):
         join_str = self.default_token_join_str
 
-        if new_line:
+        if token_lines:
             join_str = "(?#\n)"
 
         if token_join_str is not None:
@@ -201,13 +201,13 @@ class RegexBuilder(AbsRegex):
 
         tokens_regex_str = join_str.join(map(lambda tkn: tkn.regex_str(), self.tokens))
 
-        if self.is_full_fine:
+        if self.flag_full_line:
             tokens_regex_str = "^{}$".format(tokens_regex_str)
 
         return tokens_regex_str
 
-    def create(self, new_line=False):
-        return self.regex_str(new_line=new_line)
+    def create(self, token_lines=False):
+        return self.regex_str(token_lines=token_lines)
 
     # Our last whitespace token contains the match for \n as well
     def match_with_token_mask(self, text):
@@ -251,7 +251,7 @@ class RegexBuilder(AbsRegex):
                     print("{:>4}:line_num={}".format(match_count, line_num))
                     print("{}".format(match_text), end="")
 
-                    mask_regex_builder = RegexBuilder()
+                    mask_regex_builder = RegexBuilder(flag_full_line=self.flag_full_line)
 
                     # First token_mask
                     whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
@@ -279,7 +279,7 @@ class RegexBuilder(AbsRegex):
                     )
 
                     print("Token_masks:\n{}".format(token_masks))
-                    print("Mask Regex:\n{}".format(mask_regex_builder.create(new_line=True)))
+                    print("Mask Regex:\n{}".format(mask_regex_builder.create(token_lines=True)))
                     print()
 
                 # Added just for unit testing
