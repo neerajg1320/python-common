@@ -17,14 +17,14 @@ def create_sample_hdfc_builder(debug=False):
     regex_builder.push_token(NamedToken(RegexToken(token=Token.WORD, min_len=15, max_len=16), "ReferenceNum"))
     regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, max_len=1))
     regex_builder.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "ValueDate"))
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=20, max_len=34))
+    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=20, max_len=36))
 
     # Debit token is an integer or a blank_token.
     debit_token = RegexToken(token=Token.NUMBER, min_len=1, max_len=20)
     debit_token_optional = NamedToken(CompositeToken(debit_token, blank_token), "Debit")
     regex_builder.push_token(debit_token_optional)
 
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=10, max_len=25))
+    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=10, max_len=27))
 
     # Debit token is an integer or a blank_token.
     credit_token = RegexToken(token=Token.NUMBER, min_len=1, max_len=20)
