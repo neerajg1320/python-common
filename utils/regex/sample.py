@@ -71,7 +71,7 @@ def sample_hdfc_analyzer(regex_token_set, text):
     print("The Mask Map:")
     for index, line_matches in enumerate(sample_data):
         for l_match in line_matches:
-            print("{:>4}: {}".format(index, l_match['fixed_regex_token_set'].mask_str()))
+            print("{:>4}: {}".format(index, l_match['fixed_regex_token_set'].mask_str(fill_strategy='multi')))
 
     print("The Token Lengths Map:")
     for index, line_matches in enumerate(sample_data):

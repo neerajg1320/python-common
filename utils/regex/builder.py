@@ -84,7 +84,7 @@ class RegexToken(AbsRegex):
         if wildcard is not None:
             self.wildcard = wildcard
 
-        self.multiline = multiline
+        self._multiline = multiline
         if alignment is not None:
             if not isinstance(alignment, Alignment):
                 raise RuntimeError("token must be an instance of enum Token")
@@ -98,7 +98,7 @@ class RegexToken(AbsRegex):
             self.pattern_str,
             self._min_len,
             self._max_len,
-            'M' if self.multiline else 'S'
+            'M' if self._multiline else 'S'
         )
 
     @property
@@ -110,10 +110,6 @@ class RegexToken(AbsRegex):
     def set_min_len(self, len):
         self._min_len = len
 
-    @min_len.deleter
-    def del_min_len(self):
-        del self._min_len
-
     @property
     def max_len(self):
         """Maximum Occurrences of the token"""
@@ -123,9 +119,10 @@ class RegexToken(AbsRegex):
     def set_max_len(self, len):
         self._max_len = len
 
-    @max_len.deleter
-    def del_max_len(self):
-        del self._max_len
+    @property
+    def multiline(self):
+        """If Token is Multiline"""
+        return self._multiline
 
     @property
     def token_type(self):
@@ -215,6 +212,11 @@ class NamedToken(AbsRegex):
         self.regex_token.max_len = len
 
     @property
+    def multiline(self):
+        """If Token is Multiline"""
+        return self.regex_token.multiline
+
+    @property
     def token_type(self):
         """Type of RegexToken like DATE, NUMBER etc"""
         return self.regex_token.token
@@ -287,25 +289,32 @@ class RegexTokenSet(AbsRegex):
             buffer = join_str.join([buffer, token_str])
         return buffer
 
-    def mask_str(self, mask_strategy="min", fill_char="x", whitespace_char=" ", debug=False):
+    def mask_str(self, fill_strategy='all', fill_char="x", whitespace_char=" ", debug=False):
         mask_buffer = ""
         for regex_token in self.tokens:
-            if mask_strategy == "min":
-                try:
-                    if debug:
-                        print(regex_token.token_type, type(regex_token), regex_token, regex_token.min_len)
+            if regex_token.min_len != regex_token.max_len:
+                raise RuntimeError("Not Supported: regex_token {} min_len and max_len are not equal".format(regex_token))
 
-                    token_mask_len = regex_token.min_len
+            try:
+                if debug:
+                    print(regex_token.token_type, type(regex_token), regex_token, regex_token.min_len)
 
-                    if regex_token.token_type == Token.WHITESPACE_HORIZONTAL:
-                        token_char = whitespace_char
-                    else:
+                token_mask_len = regex_token.min_len
+
+                token_char = whitespace_char
+                if regex_token.token_type != Token.WHITESPACE_HORIZONTAL:
+                    if fill_strategy == 'all':
                         token_char = fill_char
+                    elif fill_strategy == 'multi':
+                        if regex_token.multiline:
+                            token_char = fill_char
+                    else:
+                        raise RuntimeError("Not Supported: fill_strategy {} is not supported".format(fill_strategy))
 
-                    token_mask_str = token_char * token_mask_len
-                    mask_buffer = "".join([mask_buffer, token_mask_str])
-                except AttributeError as e:
-                    print(e)
+                token_mask_str = token_char * token_mask_len
+                mask_buffer = "".join([mask_buffer, token_mask_str])
+            except AttributeError as e:
+                print(e)
 
         return mask_buffer
 
