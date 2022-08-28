@@ -368,10 +368,17 @@ class RegexAnalyzer:
                             RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                         )
 
-                        token_mask = [r'.', group[1], group[2], group[3]]
-                        token_masks.append(token_mask)
+                        match_token_mask = [r'.', group[1], group[2], group[3]]
+                        token_masks.append(match_token_mask)
+
+                        token_name_parts = group[3].split('__')
+                        token_multiline = len(token_name_parts) > 1 and token_name_parts[1] == 'M'
+
                         line_regex_token_set.push_token(
-                            NamedToken(RegexToken(Token.ANY_CHAR, len=token_mask[2] - token_mask[1]), token_mask[3])
+                            NamedToken(
+                                RegexToken(Token.ANY_CHAR, len=match_token_mask[2] - match_token_mask[1], multiline=token_multiline),
+                                match_token_mask[3]
+                            )
                         )
 
                         whitespace_token_mask = [r'\s', group[2], -1, '']
