@@ -387,6 +387,15 @@ class RegexAnalyzer:
             # as we assume that our pattern matches begin at a line start and end at line end
             line_start_offset = match_start_offset
 
+            if is_whitespace(match_text):
+                whitespace_line_count += 1
+                if whitespace_line_count > whitespace_line_tolerance:
+                    # print("whitespace_line_count={}".format(whitespace_line_count))
+                    shadow_pattern = None
+                continue
+
+            whitespace_line_count = 0
+
             matches_in_line = regex_pattern_apply_on_text(pattern, match_text)
 
             token_masks = []
@@ -455,15 +464,8 @@ class RegexAnalyzer:
                     print()
             else:
                 if shadow_pattern is not None:
-                    if is_whitespace(match_text):
-                        whitespace_line_count += 1
-                        # if whitespace_line_count > whitespace_line_tolerance:
-                        #     shadow_pattern = None
-                    else:
-                        whitespace_line_count = 0
-                        shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
-                        if len(shadow_matches_in_line):
-                            print("{:>3}:{}".format(line_num, match_text))
+                    shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
+                    if len(shadow_matches_in_line) > 0:
+                        print("{:>3}:{}".format(line_num, match_text))
 
         return self.lines_with_regex_token_set
-
