@@ -94,7 +94,12 @@ class RegexToken(AbsRegex):
         self.join_str = join_str
 
     def __str__(self):
-        return "(r'{}', {}, {})".format(self.pattern_str, self._min_len, self._max_len)
+        return "(r'{}', {}, {}, {})".format(
+            self.pattern_str,
+            self._min_len,
+            self._max_len,
+            'M' if self.multiline else 'S'
+        )
 
     @property
     def min_len(self):

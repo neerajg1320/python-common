@@ -60,6 +60,7 @@ def sample_hdfc_analyzer(regex_token_set, text):
             print("[{:>4}]  LineNum:{}".format(index, l_match['line_num']))
             print("    Match: {}".format(l_match['match']))
             print("    Groups: {}".format(l_match['groups']))
+            print("    FixedRegexTokenSet: {}".format(l_match['fixed_regex_token_set']))
             print("    FixedRegex:{}".format(l_match['fixed_regex_token_set'].create()))
 
     print("The Text Lines:")
