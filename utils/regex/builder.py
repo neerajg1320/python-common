@@ -244,10 +244,10 @@ class RegexTokenSet(AbsRegex):
     def set_full_line(self, flag_full_line):
         self.flag_full_line = flag_full_line
 
-    def regex_str(self, token_lines=False, token_join_str=None):
+    def regex_str(self, newline_between_tokens=False, token_join_str=None):
         join_str = self.default_token_join_str
 
-        if token_lines:
+        if newline_between_tokens:
             join_str = "(?#\n)"
 
         if token_join_str is not None:
@@ -259,8 +259,6 @@ class RegexTokenSet(AbsRegex):
                     get_regex_comment_pattern()
                 ))
 
-            # print("'{}' valid join str: {}".format(token_join_str, ))
-
             join_str = token_join_str
 
         tokens_regex_str = join_str.join(map(lambda tkn: tkn.regex_str(), self.tokens))
@@ -270,30 +268,17 @@ class RegexTokenSet(AbsRegex):
 
         return tokens_regex_str
 
-    def create(self, token_lines=False):
-        return self.regex_str(token_lines=token_lines)
 
-    def token_type_len_str(self, fill_char="X", whitespace_char="S", join_str=" ", alignment=3, debug=False):
-        buffer = ""
-        for regex_token in self.tokens:
-            if regex_token.token_type == Token.WHITESPACE_HORIZONTAL:
-                token_char = whitespace_char
-            else:
-                token_char = fill_char
+class FixedRegexTokenSet(RegexTokenSet):
+    def push_token(self, token):
+        if token.min_len != token.max_len:
+            raise RuntimeError("min_len must be equal to max_len for FixedRegexTokenSet")
 
-            if regex_token.min_len != regex_token.max_len:
-                raise RuntimeError("regex_token min_len {} is not equal to max_len {}")
-
-            format_str = "({{}},{{:>{}}})".format(alignment, alignment)
-            token_str = format_str.format(token_char, regex_token.min_len)
-            buffer = join_str.join([buffer, token_str])
-        return buffer
+        super().push_token(token)
 
     def mask_str(self, fill_strategy='all', fill_char="x", whitespace_char=" ", debug=False):
         mask_buffer = ""
         for regex_token in self.tokens:
-            if regex_token.min_len != regex_token.max_len:
-                raise RuntimeError("Not Supported: regex_token {} min_len and max_len are not equal".format(regex_token))
 
             try:
                 if debug:
@@ -318,6 +303,19 @@ class RegexTokenSet(AbsRegex):
 
         return mask_buffer
 
+    def token_type_len_str(self, fill_char="X", whitespace_char="S", join_str=" ", alignment=3, debug=False):
+        buffer = ""
+        for regex_token in self.tokens:
+            if regex_token.token_type == Token.WHITESPACE_HORIZONTAL:
+                token_char = whitespace_char
+            else:
+                token_char = fill_char
+
+            format_str = "({{}},{{:>{}}},{{:>{}}})".format(alignment, alignment, alignment)
+            token_str = format_str.format(token_char, regex_token.min_len, regex_token.max_len)
+            buffer = join_str.join([buffer, token_str])
+        return buffer
+
 
 @dataclass
 class RegexAnalyzer:
@@ -336,7 +334,7 @@ class RegexAnalyzer:
         result = regex_apply_on_text('^.*$', self.data, flags={"multiline": 1})
         self.lines_with_offsets = result["matches"]
 
-        regex_str = self.regex_token_set.create()
+        regex_str = self.regex_token_set.regex_str()
         pattern = re.compile(regex_str)
 
         match_count = 0
@@ -363,7 +361,7 @@ class RegexAnalyzer:
                         print("{:>4}:line_num={}".format(match_count, line_num))
                         print("{}".format(match_text), end="")
 
-                    line_regex_token_set = RegexTokenSet(flag_full_line=self.regex_token_set.flag_full_line)
+                    line_regex_token_set = FixedRegexTokenSet(flag_full_line=self.regex_token_set.flag_full_line)
 
                     # First token_mask
                     whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]

@@ -61,7 +61,7 @@ def sample_hdfc_analyzer(regex_token_set, text):
             print("    Match: {}".format(l_match['match']))
             print("    Groups: {}".format(l_match['groups']))
             print("    FixedRegexTokenSet: {}".format(l_match['fixed_regex_token_set']))
-            print("    FixedRegex:{}".format(l_match['fixed_regex_token_set'].create()))
+            print("    FixedRegex:{}".format(l_match['fixed_regex_token_set'].regex_str()))
 
     print("The Text Lines:")
     for index, line_matches in enumerate(sample_data):
