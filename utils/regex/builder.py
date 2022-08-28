@@ -366,7 +366,7 @@ class RegexAnalyzer:
                         token_mask = [r'.', group[1], group[2], group[3]]
                         token_masks.append(token_mask)
                         line_regex_token_set.push_token(
-                            NamedToken(RegexToken(Token.ANY_CHAR, len=token_mask[2] - token_mask[1]), token_masgit k[3])
+                            NamedToken(RegexToken(Token.ANY_CHAR, len=token_mask[2] - token_mask[1]), token_mask[3])
                         )
 
                         whitespace_token_mask = [r'\s', group[2], -1, '']
