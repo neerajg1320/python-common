@@ -32,7 +32,7 @@ class AbsRegex:
 
 class RegexToken(AbsRegex):
     def __init__(self, token=None, pattern_str=None,
-                 min_len=None, _max_len=None, len=None,
+                 _min_len=None, _max_len=None, len=None,
                  capture=False, capture_name=None,
                  value_type=None, value_format=None,
                  wildcard=None,
@@ -65,8 +65,8 @@ class RegexToken(AbsRegex):
             self._min_len = len
             self._max_len = len
 
-        if min_len is not None:
-            self._min_len = min_len
+        if _min_len is not None:
+            self._min_len = _min_len
 
         if _max_len is not None:
             self._max_len = _max_len
@@ -221,6 +221,11 @@ class NamedToken(AbsRegex):
         """Type of RegexToken like DATE, NUMBER etc"""
         return self.regex_token.token
 
+    @property
+    def token(self):
+        """Contained Regex Token"""
+        return self.regex_token
+
     def regex_str(self):
         return "(?P<{}>{})".format(self.name, self.regex_token.regex_str())
 
@@ -268,6 +273,19 @@ class RegexTokenSet(AbsRegex):
 
         return tokens_regex_str
 
+    def token_type_len_str(self, fill_char="X", whitespace_char="S", join_str=" ", alignment=3, debug=False):
+        buffer = ""
+        for regex_token in self.tokens:
+            if regex_token.token_type == Token.WHITESPACE_HORIZONTAL:
+                token_char = whitespace_char
+            else:
+                token_char = fill_char
+
+            format_str = "({{}},{{:>{}}},{{:>{}}})".format(alignment, alignment, alignment)
+            token_str = format_str.format(token_char, regex_token.min_len, regex_token.max_len)
+            buffer = join_str.join([buffer, token_str])
+        return buffer
+
 
 class FixedRegexTokenSet(RegexTokenSet):
     def push_token(self, token):
@@ -311,10 +329,45 @@ class FixedRegexTokenSet(RegexTokenSet):
             else:
                 token_char = fill_char
 
-            format_str = "({{}},{{:>{}}},{{:>{}}})".format(alignment, alignment, alignment)
-            token_str = format_str.format(token_char, regex_token.min_len, regex_token.max_len)
+            format_str = "({{}},{{:>{}}})".format(alignment, alignment)
+            token_str = format_str.format(token_char, regex_token.min_len)
             buffer = join_str.join([buffer, token_str])
         return buffer
+
+    def shadow_regex_str(self, newline_between_tokens=False, token_join_str=None):
+        join_str = self.default_token_join_str
+
+        if newline_between_tokens:
+            join_str = "(?#\n)"
+
+        if token_join_str is not None:
+            if not isinstance(token_join_str, str):
+                raise RuntimeError("token_join_str must be a string")
+
+            if not is_regex_comment_pattern(token_join_str):
+                raise RuntimeError("token_join_str must be a valid Regex Comment Format '{}'".format(
+                    get_regex_comment_pattern()
+                ))
+
+            join_str = token_join_str
+
+        shadow_tokens = []
+        for regex_token in self.tokens:
+            if regex_token.token == Token.WHITESPACE_HORIZONTAL or (not regex_token.multiline):
+                shd_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=regex_token.min_len, _max_len=regex_token.max_len)
+            else:
+                shd_token = regex_token
+
+            shadow_tokens.append(shd_token)
+            print(type(regex_token), regex_token)
+
+        # TBD: Evaluate if we should store this as well
+        shadow_tokens_regex_str = join_str.join(map(lambda tkn: tkn.regex_str(), shadow_tokens))
+
+        if self.flag_full_line:
+            shadow_tokens_regex_str = "^{}$".format(shadow_tokens_regex_str)
+
+        return shadow_tokens_regex_str
 
 
 @dataclass
