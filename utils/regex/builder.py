@@ -31,7 +31,7 @@ class AbsRegex:
 
 class RegexToken(AbsRegex):
     def __init__(self, token=None, pattern_str=None,
-                 min_len=None, max_len=None, len=None,
+                 min_len=None, _max_len=None, len=None,
                  capture=False, capture_name=None,
                  value_type=None, value_format=None,
                  wildcard=None,
@@ -41,7 +41,7 @@ class RegexToken(AbsRegex):
             raise RuntimeError("Either of the token or string has to be specified")
 
         self._min_len = -1
-        self.max_len = -1
+        self._max_len = -1
 
         if token is not None:
             if not isinstance(token, Token):
@@ -53,7 +53,7 @@ class RegexToken(AbsRegex):
                 if token.value['min_len'] is not None:
                     self._min_len = token.value['min_len']
                 if token.value['max_len'] is not None:
-                    self.max_len = token.value['max_len']
+                    self._max_len = token.value['max_len']
                 self.wildcard = token.value['wildcard']
 
         # If both are defined then pattern_str overrides the pattern_str of token
@@ -62,13 +62,13 @@ class RegexToken(AbsRegex):
 
         if len is not None:
             self._min_len = len
-            self.max_len = len
+            self._max_len = len
 
         if min_len is not None:
             self._min_len = min_len
 
-        if max_len is not None:
-            self.max_len = max_len
+        if _max_len is not None:
+            self._max_len = _max_len
 
         self.capture = capture
         self.capture_name = capture_name
@@ -93,7 +93,7 @@ class RegexToken(AbsRegex):
         self.join_str = join_str
 
     def __str__(self):
-        return "(r'{}', {}, {})".format(self.pattern_str, self._min_len, self.max_len)
+        return "(r'{}', {}, {})".format(self.pattern_str, self._min_len, self._max_len)
 
     @property
     def min_len(self):
@@ -109,6 +109,19 @@ class RegexToken(AbsRegex):
         del self._min_len
 
     @property
+    def max_len(self):
+        """Maximum Occurrences of the token"""
+        return self._max_len
+
+    @max_len.setter
+    def set_max_len(self, len):
+        self._max_len = len
+
+    @max_len.deleter
+    def del_max_len(self):
+        del self._max_len
+
+    @property
     def token_type(self):
         """Type of RegexToken like DATE, NUMBER etc"""
         return self.token
@@ -118,7 +131,7 @@ class RegexToken(AbsRegex):
         token_regex_str = self.pattern_str
 
         if self.wildcard:
-            wildcard_str = get_wildcard_str(self._min_len, self.max_len)
+            wildcard_str = get_wildcard_str(self._min_len, self._max_len)
             token_regex_str = "{}{}".format(self.pattern_str, wildcard_str)
 
         if self.capture:
@@ -186,9 +199,14 @@ class NamedToken(AbsRegex):
     def set_min_len(self, len):
         self.regex_token.min_len = len
 
-    @min_len.deleter
-    def del_min_len(self):
-        pass
+    @property
+    def max_len(self):
+        """Maximum Occurrences of the token"""
+        return self.regex_token.max_len
+
+    @max_len.setter
+    def set_max_len(self, len):
+        self.regex_token.max_len = len
 
     @property
     def token_type(self):
@@ -199,7 +217,7 @@ class NamedToken(AbsRegex):
         return "(?P<{}>{})".format(self.name, self.regex_token.regex_str())
 
 
-class RegexBuilderEngine(AbsRegex):
+class RegexTokenSet(AbsRegex):
     default_token_join_str = ""
 
     def __init__(self, flag_full_line=False):
@@ -247,6 +265,22 @@ class RegexBuilderEngine(AbsRegex):
     def create(self, token_lines=False):
         return self.regex_str(token_lines=token_lines)
 
+    def token_type_len_str(self, fill_char="X", whitespace_char="S", join_str=" ", alignment=3, debug=False):
+        buffer = ""
+        for regex_token in self.tokens:
+            if regex_token.token_type == Token.WHITESPACE_HORIZONTAL:
+                token_char = whitespace_char
+            else:
+                token_char = fill_char
+
+            if regex_token.min_len != regex_token.max_len:
+                raise RuntimeError("regex_token min_len {} is not equal to max_len {}")
+
+            format_str = "({{}},{{:>{}}})".format(alignment, alignment)
+            token_str = format_str.format(token_char, regex_token.min_len)
+            buffer = join_str.join([buffer, token_str])
+        return buffer
+
     def mask_str(self, mask_strategy="min", fill_char="x", whitespace_char=" ", debug=False):
         mask_buffer = ""
         for regex_token in self.tokens:
@@ -266,6 +300,9 @@ class RegexBuilderEngine(AbsRegex):
                     mask_buffer = "".join([mask_buffer, token_mask_str])
                 except AttributeError as e:
                     print(e)
+
+
+
 
         return mask_buffer
 
@@ -304,7 +341,7 @@ class RegexBuilderEngine(AbsRegex):
                     print("{:>4}:line_num={}".format(match_count, line_num))
                     print("{}".format(match_text), end="")
 
-                mask_regex_builder = RegexBuilderEngine(flag_full_line=self.flag_full_line)
+                mask_regex_builder = RegexTokenSet(flag_full_line=self.flag_full_line)
 
                 # First token_mask
                 whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
@@ -344,3 +381,13 @@ class RegexBuilderEngine(AbsRegex):
                     print()
 
         return lines_with_mask_regex_builder
+
+
+from dataclasses import dataclass
+
+@dataclass
+class RegexAnalyzer:
+    regex_token_set: RegexTokenSet
+    data: str
+
+

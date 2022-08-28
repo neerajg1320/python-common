@@ -1,44 +1,69 @@
-from .builder import Token, RegexToken, CompositeToken, NamedToken, RegexBuilderEngine
+from .builder import Token, RegexToken, CompositeToken, NamedToken, RegexTokenSet, RegexAnalyzer
 
 
-def create_sample_hdfc_builder(debug=False):
-    regex_builder = RegexBuilderEngine(flag_full_line=True)
+def sample_hdfc_regex_token_set(debug=False):
+    regex_token_set = RegexTokenSet(flag_full_line=True)
 
     # To be used in Debit and Credit where the value is blank as only one of Credit or Debit is specified
     blank_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, len=1)
 
     # We have a starting space
-    regex_builder.push_token(blank_token)
+    regex_token_set.push_token(blank_token)
 
-    regex_builder.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "TransactionDate"))
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, max_len=1))
-    regex_builder.push_token(NamedToken(RegexToken(token=Token.PHRASE, max_len=1), "Descript__M__LA"))
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=10, max_len=90))
-    regex_builder.push_token(NamedToken(RegexToken(token=Token.WORD, min_len=15, max_len=16), "ReferenceNum"))
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, max_len=1))
-    regex_builder.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "ValueDate"))
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=20, max_len=36))
+    regex_token_set.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "TransactionDate"))
+    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _max_len=1))
+    regex_token_set.push_token(NamedToken(RegexToken(token=Token.PHRASE, _max_len=1), "Descript__M__LA"))
+    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=10, _max_len=90))
+    regex_token_set.push_token(NamedToken(RegexToken(token=Token.WORD, min_len=15, _max_len=16), "ReferenceNum"))
+    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _max_len=1))
+    regex_token_set.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "ValueDate"))
+    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=20, _max_len=36))
 
     # Debit token is an integer or a blank_token.
-    debit_token = RegexToken(token=Token.NUMBER, min_len=1, max_len=20)
+    debit_token = RegexToken(token=Token.NUMBER, min_len=1, _max_len=20)
     debit_token_optional = NamedToken(CompositeToken(debit_token, blank_token), "Debit")
-    regex_builder.push_token(debit_token_optional)
+    regex_token_set.push_token(debit_token_optional)
 
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=10, max_len=27))
+    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=10, _max_len=27))
 
     # Debit token is an integer or a blank_token.
-    credit_token = RegexToken(token=Token.NUMBER, min_len=1, max_len=20)
+    credit_token = RegexToken(token=Token.NUMBER, min_len=1, _max_len=20)
     credit_token_optional = NamedToken(CompositeToken(credit_token, blank_token), "Credit")
-    regex_builder.push_token(credit_token_optional)
+    regex_token_set.push_token(credit_token_optional)
 
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=15, max_len=30))
-    regex_builder.push_token(NamedToken(RegexToken(token=Token.NUMBER, min_len=1, max_len=20), "Balance"))
+    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=15, _max_len=30))
+    regex_token_set.push_token(NamedToken(RegexToken(token=Token.NUMBER, min_len=1, _max_len=20), "Balance"))
 
     # We have a trailing space
-    regex_builder.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=0, max_len=4))
+    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=0, _max_len=4))
 
     if debug:
         print("Regex Builder:")
-        print(regex_builder)
+        print(regex_token_set)
 
-    return regex_builder
+    return regex_token_set
+
+
+def sample_hdfc_analyzer(regex_token_set, sample_data):
+    regex_analyzer = RegexAnalyzer(regex_token_set, "")
+
+    regex_analyzer.data = sample_data
+
+    for index, line in enumerate(sample_data):
+        print("[{:>4}]  LineNum:{}".format(index, line['line_num']))
+        print("    Match: {}".format(line['match']))
+        print("    Groups: {}".format(line['groups']))
+        print("    MaskRegex:{}".format(line['mask_regex_builder'].create()))
+
+    print("The Text Lines:")
+    for index, line in enumerate(sample_data):
+        print("{:>4}: {}".format(index, line['match'][0]))
+
+    print("The Mask Map:")
+    for index, line in enumerate(sample_data):
+        print("{:>4}: {}".format(index, line['mask_regex_builder'].mask_str()))
+
+    print("The Token Lengths Map:")
+    for index, line in enumerate(sample_data):
+        print("{}".format(line['mask_regex_builder'].token_type_len_str()))
+    # The next stage we will fix the alignment for the columns
