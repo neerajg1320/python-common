@@ -55,23 +55,27 @@ def sample_hdfc_analyzer(regex_token_set, text):
     sample_size = 10
     sample_data = data[sample_offset:sample_size]
 
-    for index, line in enumerate(sample_data):
-        print("[{:>4}]  LineNum:{}".format(index, line['line_num']))
-        print("    Match: {}".format(line['match']))
-        print("    Groups: {}".format(line['groups']))
-        print("    MaskRegex:{}".format(line['mask_regex_builder'].create()))
+    for index, line_matches in enumerate(sample_data):
+        for l_match in line_matches:
+            print("[{:>4}]  LineNum:{}".format(index, l_match['line_num']))
+            print("    Match: {}".format(l_match['match']))
+            print("    Groups: {}".format(l_match['groups']))
+            print("    MaskRegex:{}".format(l_match['mask_regex_builder'].create()))
 
     print("The Text Lines:")
-    for index, line in enumerate(sample_data):
-        print("{:>4}: {}".format(index, line['match'][0]))
+    for index, line_matches in enumerate(sample_data):
+        for l_match in line_matches:
+            print("{:>4}: {}".format(index, l_match['match'][0]))
 
     print("The Mask Map:")
-    for index, line in enumerate(sample_data):
-        print("{:>4}: {}".format(index, line['mask_regex_builder'].mask_str()))
+    for index, line_matches in enumerate(sample_data):
+        for l_match in line_matches:
+            print("{:>4}: {}".format(index, l_match['mask_regex_builder'].mask_str()))
 
     print("The Token Lengths Map:")
-    for index, line in enumerate(sample_data):
-        print("{}".format(line['mask_regex_builder'].token_type_len_str()))
+    for index, line_matches in enumerate(sample_data):
+        for l_match in line_matches:
+            print("{}".format(l_match['mask_regex_builder'].token_type_len_str()))
     # The next stage we will fix the alignment for the columns
 
     return regex_analyzer

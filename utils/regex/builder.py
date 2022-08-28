@@ -344,44 +344,44 @@ class RegexAnalyzer:
             if len(matches_in_line) > 0:
                 match_count += 1
 
-                first_match = matches_in_line[0]
-                if debug:
-                    print("{:>4}:line_num={}".format(match_count, line_num))
-                    print("{}".format(match_text), end="")
-
-                line_regex_token_set = RegexTokenSet(flag_full_line=self.regex_token_set.flag_full_line)
-
-                # First token_mask
-                whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
-                token_masks.append(whitespace_token_mask)
-                for g_idx, group in enumerate(first_match['groups']):
+                for line_match in matches_in_line:
                     if debug:
-                        print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
+                        print("{:>4}:line_num={}".format(match_count, line_num))
+                        print("{}".format(match_text), end="")
 
-                    whitespace_token_mask[2] = group[1]
+                    line_regex_token_set = RegexTokenSet(flag_full_line=self.regex_token_set.flag_full_line)
+
+                    # First token_mask
+                    whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
+                    token_masks.append(whitespace_token_mask)
+                    for g_idx, group in enumerate(line_match['groups']):
+                        if debug:
+                            print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
+
+                        whitespace_token_mask[2] = group[1]
+                        line_regex_token_set.push_token(
+                            RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
+                        )
+
+                        token_mask = [r'.', group[1], group[2], group[3]]
+                        token_masks.append(token_mask)
+                        line_regex_token_set.push_token(
+                            NamedToken(RegexToken(Token.ANY_CHAR, len=token_mask[2] - token_mask[1]), token_masgit k[3])
+                        )
+
+                        whitespace_token_mask = [r'\s', group[2], -1, '']
+                        token_masks.append(whitespace_token_mask)
+
+                    # Last token mask
+                    whitespace_token_mask[2] = match_end_offset - match_start_offset
                     line_regex_token_set.push_token(
                         RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
-                    token_mask = [r'.', group[1], group[2], group[3]]
-                    token_masks.append(token_mask)
-                    line_regex_token_set.push_token(
-                        NamedToken(RegexToken(Token.ANY_CHAR, len=token_mask[2] - token_mask[1]), token_mask[3])
-                    )
+                    line_match['line_num'] = line_num
+                    line_match['mask_regex_builder'] = line_regex_token_set
 
-                    whitespace_token_mask = [r'\s', group[2], -1, '']
-                    token_masks.append(whitespace_token_mask)
-
-                # Last token mask
-                whitespace_token_mask[2] = match_end_offset - match_start_offset
-                line_regex_token_set.push_token(
-                    RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
-                )
-
-                first_match['line_num'] = line_num
-                first_match['mask_regex_builder'] = line_regex_token_set
-
-                self.lines_with_regex_token_set.append(first_match)
+                self.lines_with_regex_token_set.append(matches_in_line)
 
                 if debug:
                     print("Token_masks:\n{}".format(token_masks))
