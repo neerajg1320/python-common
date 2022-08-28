@@ -44,10 +44,16 @@ def sample_hdfc_regex_token_set(debug=False):
     return regex_token_set
 
 
-def sample_hdfc_analyzer(regex_token_set, sample_data):
+def sample_hdfc_analyzer(regex_token_set, text):
     regex_analyzer = RegexAnalyzer(regex_token_set, "")
 
-    regex_analyzer.data = sample_data
+    regex_analyzer.data = text
+
+    data = regex_analyzer.get_matches_with_token_mask_builder()
+
+    sample_offset = 0
+    sample_size = 10
+    sample_data = data[sample_offset:sample_sizegit]
 
     for index, line in enumerate(sample_data):
         print("[{:>4}]  LineNum:{}".format(index, line['line_num']))
@@ -67,3 +73,5 @@ def sample_hdfc_analyzer(regex_token_set, sample_data):
     for index, line in enumerate(sample_data):
         print("{}".format(line['mask_regex_builder'].token_type_len_str()))
     # The next stage we will fix the alignment for the columns
+
+    return regex_analyzer
