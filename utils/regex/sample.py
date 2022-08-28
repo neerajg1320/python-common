@@ -52,7 +52,7 @@ def sample_hdfc_analyzer(regex_token_set, text):
     data = regex_analyzer.get_matches_with_regex_token_set()
 
     sample_offset = 0
-    sample_size = 5
+    sample_size = 10
     sample_data = data[sample_offset:sample_size]
 
     for index, line_matches in enumerate(sample_data):
@@ -63,17 +63,17 @@ def sample_hdfc_analyzer(regex_token_set, text):
             # print("    FixedRegexTokenSet: {}".format(l_match['fixed_regex_token_set']))
             print("    FixedRegex:{}".format(l_match['fixed_regex_token_set'].regex_str()))
 
-    print("The Text Lines:")
-    for index, line_matches in enumerate(sample_data):
-        for l_match in line_matches:
-            print("{:>4}: {}".format(index, l_match['match'][0]))
-
     print("The Mask Map:")
     for index, line_matches in enumerate(sample_data):
         for l_match in line_matches:
             # print("{:>4}: {}".format(index, l_match['fixed_regex_token_set'].generate_shadow_token_set().regex_str()))
             print("{:>4}: {}".format(index, l_match['fixed_regex_token_set'].mask_str()))
             print("{:>4}: {}".format(index, l_match['fixed_regex_token_set'].generate_shadow_token_set().mask_str()))
+
+    print("The Text Lines:")
+    for index, line_matches in enumerate(sample_data):
+        for l_match in line_matches:
+            print("{:>4}: {}".format(index, l_match['match'][0]))
 
     print("The Token Lengths Map:")
     for index, line_matches in enumerate(sample_data):

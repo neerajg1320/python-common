@@ -301,27 +301,23 @@ class FixedRegexTokenSet(RegexTokenSet):
     def mask_str(self, fill_strategy='all', fill_char="x", whitespace_char=" ", debug=False):
         mask_buffer = ""
         for regex_token in self.tokens:
+            if debug:
+                print(regex_token.token_type, type(regex_token), regex_token, regex_token.min_len)
 
-            try:
-                if debug:
-                    print(regex_token.token_type, type(regex_token), regex_token, regex_token.min_len)
+            token_mask_len = regex_token.min_len
 
-                token_mask_len = regex_token.min_len
-
-                token_char = whitespace_char
-                if regex_token.token_type != Token.WHITESPACE_HORIZONTAL:
-                    if fill_strategy == 'all':
+            token_char = whitespace_char
+            if regex_token.token_type != Token.WHITESPACE_HORIZONTAL:
+                if fill_strategy == 'all':
+                    token_char = fill_char
+                elif fill_strategy == 'multi':
+                    if regex_token.multiline:
                         token_char = fill_char
-                    elif fill_strategy == 'multi':
-                        if regex_token.multiline:
-                            token_char = fill_char
-                    else:
-                        raise RuntimeError("Not Supported: fill_strategy {} is not supported".format(fill_strategy))
+                else:
+                    raise RuntimeError("Not Supported: fill_strategy {} is not supported".format(fill_strategy))
 
-                token_mask_str = token_char * token_mask_len
-                mask_buffer = "".join([mask_buffer, token_mask_str])
-            except AttributeError as e:
-                print(e)
+            token_mask_str = token_char * token_mask_len
+            mask_buffer = "".join([mask_buffer, token_mask_str])
 
         return mask_buffer
 
@@ -348,7 +344,6 @@ class FixedRegexTokenSet(RegexTokenSet):
                 shd_token = regex_token
 
             shadow_token_set.push_token(shd_token)
-            # print(type(regex_token), regex_token)
 
         return shadow_token_set
 
