@@ -288,6 +288,10 @@ class RegexTokenSet(AbsRegex):
 
 
 class FixedRegexTokenSet(RegexTokenSet):
+    def __init(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.shadow_tokens = []
+
     def push_token(self, token):
         if token.min_len != token.max_len:
             raise RuntimeError("min_len must be equal to max_len for FixedRegexTokenSet")
@@ -334,40 +338,19 @@ class FixedRegexTokenSet(RegexTokenSet):
             buffer = join_str.join([buffer, token_str])
         return buffer
 
-    def shadow_regex_str(self, newline_between_tokens=False, token_join_str=None):
-        join_str = self.default_token_join_str
+    def generate_shadow_token_set(self):
+        shadow_token_set = FixedRegexTokenSet(flag_full_line=self.flag_full_line)
 
-        if newline_between_tokens:
-            join_str = "(?#\n)"
-
-        if token_join_str is not None:
-            if not isinstance(token_join_str, str):
-                raise RuntimeError("token_join_str must be a string")
-
-            if not is_regex_comment_pattern(token_join_str):
-                raise RuntimeError("token_join_str must be a valid Regex Comment Format '{}'".format(
-                    get_regex_comment_pattern()
-                ))
-
-            join_str = token_join_str
-
-        shadow_tokens = []
         for regex_token in self.tokens:
             if regex_token.token == Token.WHITESPACE_HORIZONTAL or (not regex_token.multiline):
                 shd_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=regex_token.min_len, _max_len=regex_token.max_len)
             else:
                 shd_token = regex_token
 
-            shadow_tokens.append(shd_token)
-            print(type(regex_token), regex_token)
+            shadow_token_set.push_token(shd_token)
+            # print(type(regex_token), regex_token)
 
-        # TBD: Evaluate if we should store this as well
-        shadow_tokens_regex_str = join_str.join(map(lambda tkn: tkn.regex_str(), shadow_tokens))
-
-        if self.flag_full_line:
-            shadow_tokens_regex_str = "^{}$".format(shadow_tokens_regex_str)
-
-        return shadow_tokens_regex_str
+        return shadow_token_set
 
 
 @dataclass
