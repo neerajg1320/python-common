@@ -309,24 +309,25 @@ class RegexTokenSet(AbsRegex):
 class RegexAnalyzer:
     regex_token_set: RegexTokenSet
     data: str = field(init=False, default=None)
+    lines_with_offsets: list = field(default_factory=list, init=False)
+    lines_with_regex_token_set: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
-    def get_matches_with_token_mask_builder(self, debug=False):
+    def get_matches_with_regex_token_set(self, debug=False):
         if self.data is None:
             raise RuntimeError("get_matches_with_token_mask_builder(): data must be set before calling this function")
 
         # TBD: Can be made as a routine
         # We leave the \n out of the match even though we match the whole line
         result = regex_apply_on_text('^.*$', self.data, flags={"multiline": 1})
-        lines_with_offsets = result["matches"]
+        self.lines_with_offsets = result["matches"]
 
         regex_str = self.regex_token_set.create()
         pattern = re.compile(regex_str)
 
         match_count = 0
 
-        lines_with_mask_regex_builder = []
-        for line_num, line in enumerate(lines_with_offsets):
+        for line_num, line in enumerate(self.lines_with_offsets):
             match_text = line['match'][0]
             match_start_offset = line['match'][1]
             match_end_offset = line['match'][2]
@@ -336,19 +337,19 @@ class RegexAnalyzer:
             # as we assume that our pattern matches begin at a line start and end at line end
             line_start_offset = match_start_offset
 
-            match_full_and_groups = regex_pattern_apply_on_text(pattern, match_text)
+            matches_in_line = regex_pattern_apply_on_text(pattern, match_text)
 
             token_masks = []
 
-            if len(match_full_and_groups) > 0:
+            if len(matches_in_line) > 0:
                 match_count += 1
 
-                first_match = match_full_and_groups[0]
+                first_match = matches_in_line[0]
                 if debug:
                     print("{:>4}:line_num={}".format(match_count, line_num))
                     print("{}".format(match_text), end="")
 
-                mask_regex_builder = RegexTokenSet(flag_full_line=self.regex_token_set.flag_full_line)
+                line_regex_token_set = RegexTokenSet(flag_full_line=self.regex_token_set.flag_full_line)
 
                 # First token_mask
                 whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
@@ -358,13 +359,13 @@ class RegexAnalyzer:
                         print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
 
                     whitespace_token_mask[2] = group[1]
-                    mask_regex_builder.push_token(
+                    line_regex_token_set.push_token(
                         RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
                     token_mask = [r'.', group[1], group[2], group[3]]
                     token_masks.append(token_mask)
-                    mask_regex_builder.push_token(
+                    line_regex_token_set.push_token(
                         NamedToken(RegexToken(Token.ANY_CHAR, len=token_mask[2] - token_mask[1]), token_mask[3])
                     )
 
@@ -373,19 +374,19 @@ class RegexAnalyzer:
 
                 # Last token mask
                 whitespace_token_mask[2] = match_end_offset - match_start_offset
-                mask_regex_builder.push_token(
+                line_regex_token_set.push_token(
                     RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                 )
 
                 first_match['line_num'] = line_num
-                first_match['mask_regex_builder'] = mask_regex_builder
+                first_match['mask_regex_builder'] = line_regex_token_set
 
-                lines_with_mask_regex_builder.append(first_match)
+                self.lines_with_regex_token_set.append(first_match)
 
                 if debug:
                     print("Token_masks:\n{}".format(token_masks))
                     print("Mask Regex:\n{}".format(line['mask_regex']))
                     print()
 
-        return lines_with_mask_regex_builder
+        return self.lines_with_regex_token_set
 
