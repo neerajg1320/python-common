@@ -203,7 +203,7 @@ class RegexBuilder(AbsRegex):
     default_token_join_str = ""
 
     def __init__(self, flag_full_line=False):
-        self.tokens : RegexToken = []
+        self.tokens: RegexToken = []
         self.flag_full_line = flag_full_line
 
     def __str__(self):
