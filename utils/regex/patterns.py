@@ -12,5 +12,9 @@ def is_regex_comment_pattern(text):
     return len(re.findall(REGEX_COMMENT_PATTERN_ESCAPED, text, flags=re.DOTALL)) == 1
 
 
+def is_whitespace(text):
+    return re.match(r'^\s*$', text) is not None
+
+
 def get_regex_comment_pattern():
     return REGEX_COMMENT_PATTERN

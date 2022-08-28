@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import re
 from enum import Enum
 from .wildcard import get_wildcard_str
-from .patterns import is_regex_comment_pattern, get_regex_comment_pattern
+from .patterns import is_regex_comment_pattern, get_regex_comment_pattern, is_whitespace
 from utils.regex_utils import regex_apply_on_text, regex_pattern_apply_on_text
 
 
@@ -288,9 +288,14 @@ class RegexTokenSet(AbsRegex):
 
 
 class FixedRegexTokenSet(RegexTokenSet):
-    def __init(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        self._shadow_token_set = None
         super().__init__(*args, **kwargs)
-        self.shadow_tokens = []
+
+    @property
+    def shadow_token_set(self):
+        """Shadow Token Set which is used to match following lines"""
+        return self._shadow_token_set
 
     def push_token(self, token):
         if token.min_len != token.max_len:
@@ -335,7 +340,7 @@ class FixedRegexTokenSet(RegexTokenSet):
         return buffer
 
     def generate_shadow_token_set(self):
-        shadow_token_set = FixedRegexTokenSet(flag_full_line=self.flag_full_line)
+        self._shadow_token_set = FixedRegexTokenSet(flag_full_line=self.flag_full_line)
 
         for regex_token in self.tokens:
             if regex_token.token == Token.WHITESPACE_HORIZONTAL or (not regex_token.multiline):
@@ -343,9 +348,9 @@ class FixedRegexTokenSet(RegexTokenSet):
             else:
                 shd_token = regex_token
 
-            shadow_token_set.push_token(shd_token)
+            self._shadow_token_set.push_token(shd_token)
 
-        return shadow_token_set
+        return self._shadow_token_set
 
 
 @dataclass
@@ -356,7 +361,7 @@ class RegexAnalyzer:
     lines_with_regex_token_set: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
-    def get_matches_with_regex_token_set(self, debug=False):
+    def get_matches_with_regex_token_set(self, whitespace_line_tolerance=1, debug=False):
         if self.data is None:
             raise RuntimeError("get_matches_with_token_mask_builder(): data must be set before calling this function")
 
@@ -367,10 +372,12 @@ class RegexAnalyzer:
 
         regex_str = self.regex_token_set.regex_str()
         pattern = re.compile(regex_str)
+        shadow_pattern = None
 
         match_count = 0
+        whitespace_line_count = 0
 
-        for line_num, line in enumerate(self.lines_with_offsets):
+        for line_num, line in enumerate(self.lines_with_offsets, 1):
             match_text = line['match'][0]
             match_start_offset = line['match'][1]
             match_end_offset = line['match'][2]
@@ -386,6 +393,7 @@ class RegexAnalyzer:
 
             if len(matches_in_line) > 0:
                 match_count += 1
+                print("{:>3}:{}".format(line_num, match_text))
 
                 for line_match in matches_in_line:
                     if debug:
@@ -431,12 +439,31 @@ class RegexAnalyzer:
                     line_match['line_num'] = line_num
                     line_match['fixed_regex_token_set'] = line_regex_token_set
 
+                    # Generate the shadow token set so that we can match the following lines
+                    line_regex_token_set.generate_shadow_token_set()
+                    if line_regex_token_set.shadow_token_set is not None:
+                        shadow_regex_str = line_regex_token_set.shadow_token_set.regex_str()
+                        if debug:
+                            print("Generated ShadowRegex:{}".format(shadow_regex_str))
+                        shadow_pattern = re.compile(shadow_regex_str)
+
                 self.lines_with_regex_token_set.append(matches_in_line)
 
                 if debug:
                     print("Token_masks:\n{}".format(token_masks))
                     print("Fixed Regex:\n{}".format(line['mask_regex']))
                     print()
+            else:
+                if shadow_pattern is not None:
+                    if is_whitespace(match_text):
+                        whitespace_line_count += 1
+                        # if whitespace_line_count > whitespace_line_tolerance:
+                        #     shadow_pattern = None
+                    else:
+                        whitespace_line_count = 0
+                        shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
+                        if len(shadow_matches_in_line):
+                            print("{:>3}:{}".format(line_num, match_text))
 
         return self.lines_with_regex_token_set
 
