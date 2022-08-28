@@ -1,8 +1,8 @@
-from .builder import Token, RegexToken, CompositeToken, NamedToken, RegexBuilder
+from .builder import Token, RegexToken, CompositeToken, NamedToken, RegexBuilderEngine
 
 
 def create_sample_hdfc_builder(debug=False):
-    regex_builder = RegexBuilder(flag_full_line=True)
+    regex_builder = RegexBuilderEngine(flag_full_line=True)
 
     # To be used in Debit and Credit where the value is blank as only one of Credit or Debit is specified
     blank_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, len=1)

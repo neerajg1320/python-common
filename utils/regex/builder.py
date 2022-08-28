@@ -199,7 +199,7 @@ class NamedToken(AbsRegex):
         return "(?P<{}>{})".format(self.name, self.regex_token.regex_str())
 
 
-class RegexBuilder(AbsRegex):
+class RegexBuilderEngine(AbsRegex):
     default_token_join_str = ""
 
     def __init__(self, flag_full_line=False):
@@ -304,7 +304,7 @@ class RegexBuilder(AbsRegex):
                     print("{:>4}:line_num={}".format(match_count, line_num))
                     print("{}".format(match_text), end="")
 
-                mask_regex_builder = RegexBuilder(flag_full_line=self.flag_full_line)
+                mask_regex_builder = RegexBuilderEngine(flag_full_line=self.flag_full_line)
 
                 # First token_mask
                 whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
