@@ -379,13 +379,13 @@ class RegexAnalyzer:
                     )
 
                     line_match['line_num'] = line_num
-                    line_match['mask_regex_builder'] = line_regex_token_set
+                    line_match['fixed_regex_token_set'] = line_regex_token_set
 
                 self.lines_with_regex_token_set.append(matches_in_line)
 
                 if debug:
                     print("Token_masks:\n{}".format(token_masks))
-                    print("Mask Regex:\n{}".format(line['mask_regex']))
+                    print("Fixed Regex:\n{}".format(line['mask_regex']))
                     print()
 
         return self.lines_with_regex_token_set
