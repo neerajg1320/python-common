@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 import re
 from enum import Enum
 from .wildcard import get_wildcard_str
@@ -304,16 +305,16 @@ class RegexTokenSet(AbsRegex):
         return mask_buffer
 
 
-from dataclasses import dataclass
-
-
 @dataclass
 class RegexAnalyzer:
     regex_token_set: RegexTokenSet
-    data: str
+    data: str = field(init=False, default=None)
 
     # Our last whitespace token contains the match for \n as well
     def get_matches_with_token_mask_builder(self, debug=False):
+        if self.data is None:
+            raise RuntimeError("get_matches_with_token_mask_builder(): data must be set before calling this function")
+
         # TBD: Can be made as a routine
         # We leave the \n out of the match even though we match the whole line
         result = regex_apply_on_text('^.*$', self.data, flags={"multiline": 1})

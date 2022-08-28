@@ -45,7 +45,7 @@ def sample_hdfc_regex_token_set(debug=False):
 
 
 def sample_hdfc_analyzer(regex_token_set, text):
-    regex_analyzer = RegexAnalyzer(regex_token_set, "")
+    regex_analyzer = RegexAnalyzer(regex_token_set)
 
     regex_analyzer.data = text
 
@@ -53,7 +53,7 @@ def sample_hdfc_analyzer(regex_token_set, text):
 
     sample_offset = 0
     sample_size = 10
-    sample_data = data[sample_offset:sample_sizegit]
+    sample_data = data[sample_offset:sample_size]
 
     for index, line in enumerate(sample_data):
         print("[{:>4}]  LineNum:{}".format(index, line['line_num']))
