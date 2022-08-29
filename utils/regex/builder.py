@@ -519,7 +519,7 @@ class RegexTextProcessor:
                     # print(match_data)
                     self.matches_with_absolute_offsets.append(self.convert_absolute_offsets(match_data, shadow_line_absolute_offset))
 
-    def generate_frame(self, debug=False):
+    def generate_frame_objects(self, debug=False):
         if debug:
             print("Generate Frame")
 
@@ -529,22 +529,18 @@ class RegexTextProcessor:
 
             # Lines can have multiple matches
             for match_data in matches_in_line:
-                # print(line_data)
                 match_object = {}
-                for g_idx, group in match_data['groups']:
+                for group in match_data['groups']:
                     match_object[group[3]] = group[0]
                 self.frame_objects.append(match_object)
 
-            # # There can be multiple shadow lines
-            # for shadow_line_data in shadow_lines:
-            #     # print("{}".format(shadow_line_data))
-            #     matches_in_line = shadow_line_data["matches_in_line"]
-            #     shadow_line_absolute_offset = shadow_line_data['line_match'][1]
-            #     for match_data in matches_in_line:
-            #         # print(match_data)
-            #         self.matches_with_absolute_offsets.append(self.convert_absolute_offsets(match_data, shadow_line_absolute_offset))
-
-
+            # There can be multiple shadow lines
+            for shadow_line_data in shadow_lines:
+                matches_in_line = shadow_line_data["matches_in_line"]
+                for match_data in matches_in_line:
+                    for group in match_data['groups']:
+                        print("Need to add '{}' in '{}'".format(group[0], group[3]))
+                        match_object[group[3]] = "--".join([match_object[group[3]], group[0]])
 
     @staticmethod
     def convert_absolute_offsets(match_data, line_absolute_offset):

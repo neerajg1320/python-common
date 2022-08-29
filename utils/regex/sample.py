@@ -1,4 +1,6 @@
+import pandas as pd
 from .builder import Token, RegexToken, CompositeToken, NamedToken, RegexTokenSet, RegexTextProcessor
+from utils.dataframe.dataframe_utils import df_print
 
 
 def get_sample_hdfc_regex_token_set(debug=False):
@@ -87,6 +89,14 @@ def sample_hdfc_regex_text_processor(regex_token_set, text):
     regex_text_processor.generate_matches_absolute()
     for index, line_final in enumerate(regex_text_processor.matches_with_absolute_offsets[sample_offset:sample_size]):
         print(line_final)
+
+    regex_text_processor.generate_frame_objects()
+
+    df = pd.DataFrame(regex_text_processor.frame_objects)
+    print("DataFrame:")
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_colwidth', None)
+    print(df)
 
     print("Total Matches: {}".format(len(regex_text_processor.matched_lines_data)))
     return regex_text_processor
