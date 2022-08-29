@@ -1,5 +1,5 @@
 import pandas as pd
-from .builder import Token, RegexToken, CompositeToken, NamedToken, RegexTokenSet, RegexTextProcessor
+from .builder import Alignment, Token, RegexToken, CompositeToken, NamedToken, RegexTokenSet, RegexTextProcessor
 from utils.dataframe.dataframe_utils import df_print
 
 
@@ -14,7 +14,8 @@ def get_sample_hdfc_regex_token_set(debug=False):
 
     regex_token_set.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "TransactionDate"))
     regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _max_len=1))
-    regex_token_set.push_token(NamedToken(RegexToken(token=Token.PHRASE, _max_len=1), "Descript__M__LA"))
+    regex_token_set.push_token(NamedToken(RegexToken(token=Token.PHRASE, _max_len=1, multiline=True, alignment=Alignment.LEFT),
+                                          "Description"))
     regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=10, _max_len=90))
     regex_token_set.push_token(NamedToken(RegexToken(token=Token.WORD, _min_len=15, _max_len=16), "ReferenceNum"))
     regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _max_len=1))

@@ -176,7 +176,7 @@ class CompositeToken(AbsRegex):
     @property
     def multiline(self):
         """If Token is Multiline"""
-        return self._multiline
+        return len(self.tokens) > 0 and self.tokens[0].multiline
 
     def regex_str(self):
         regexes = []
@@ -195,8 +195,8 @@ class NamedToken(AbsRegex):
         if not isinstance(name, str):
             raise RuntimeError("name must be string")
 
-        name_parts = name.split('__')
-        self.multiline = len(name_parts) > 1 and name_parts[1] == 'M'
+        # name_parts = name.split('__')
+        # self.multiline = len(name_parts) > 1 and name_parts[1] == 'M'
         self.name = name
 
     def __str__(self):
