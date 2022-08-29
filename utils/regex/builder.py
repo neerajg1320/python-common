@@ -357,18 +357,18 @@ class FixedRegexTokenSet(RegexTokenSet):
 class RegexTextProcessor:
     regex_token_set: RegexTokenSet
     data: str = field(init=False, default=None)
-    lines_with_offsets: list = field(default_factory=list, init=False)
-    lines_with_regex_token_set: list = field(default_factory=list, init=False)
+    all_lines_with_offsets: list = field(default_factory=list, init=False)
+    matched_lines_data: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
-    def get_matches_with_regex_token_set(self, whitespace_line_tolerance=1, debug=False):
+    def get_matched_data(self, whitespace_line_tolerance=1, debug=False):
         if self.data is None:
             raise RuntimeError("get_matches_with_token_mask_builder(): data must be set before calling this function")
 
         # TBD: Can be made as a routine
         # We leave the \n out of the match even though we match the whole line
         result = regex_apply_on_text('^.*$', self.data, flags={"multiline": 1})
-        self.lines_with_offsets = result["matches"]
+        self.all_lines_with_offsets = result["matches"]
 
         regex_str = self.regex_token_set.regex_str()
         pattern = re.compile(regex_str)
@@ -377,7 +377,7 @@ class RegexTextProcessor:
         match_count = 0
         whitespace_line_count = 0
 
-        for line_num, line in enumerate(self.lines_with_offsets, 1):
+        for line_num, line in enumerate(self.all_lines_with_offsets, 1):
             match_text = line['match'][0]
             match_start_offset = line['match'][1]
             match_end_offset = line['match'][2]
@@ -456,7 +456,7 @@ class RegexTextProcessor:
                             print("Generated ShadowRegex:{}".format(shadow_regex_str))
                         shadow_pattern = re.compile(shadow_regex_str)
 
-                self.lines_with_regex_token_set.append(matches_in_line)
+                self.matched_lines_data.append(matches_in_line)
 
                 if debug:
                     print("Token_masks:\n{}".format(token_masks))
@@ -468,4 +468,4 @@ class RegexTextProcessor:
                     if len(shadow_matches_in_line) > 0:
                         print("{:>3}:{}".format(line_num, match_text))
 
-        return self.lines_with_regex_token_set
+        return self.matched_lines_data

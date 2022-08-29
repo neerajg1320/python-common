@@ -49,7 +49,7 @@ def sample_hdfc_regex_text_processor(regex_token_set, text):
 
     regex_text_processor.data = text
 
-    matched_lines = regex_text_processor.get_matches_with_regex_token_set()
+    matched_lines = regex_text_processor.get_matched_data()
 
     sample_offset = 0
     sample_size = 10
