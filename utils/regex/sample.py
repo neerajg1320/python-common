@@ -1,7 +1,7 @@
 from .builder import Token, RegexToken, CompositeToken, NamedToken, RegexTokenSet, RegexTextProcessor
 
 
-def sample_hdfc_regex_token_set(debug=False):
+def get_sample_hdfc_regex_token_set(debug=False):
     regex_token_set = RegexTokenSet(flag_full_line=True)
 
     # To be used in Debit and Credit where the value is blank as only one of Credit or Debit is specified

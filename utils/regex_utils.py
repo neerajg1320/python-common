@@ -33,28 +33,42 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
     result = regex_apply_on_text(regex_str, text, flags=flags)
 
     if extrapolate:
-        multiline_matches = get_multiline_post_para_offsets(result['matches'], len(text))
+        extrapolate_new_approach = True
 
-        matches_with_post_groups = get_matches_with_group_relative_offsets(text, multiline_matches)
+        if not extrapolate_new_approach:
+            multiline_matches = get_multiline_post_para_offsets(result['matches'], len(text))
 
-        if debug:
-            print("Matches with post groups")
-            for m in matches_with_post_groups:
-                print(m)
+            matches_with_post_groups = get_matches_with_group_relative_offsets(text, multiline_matches)
 
-        matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
+            if debug:
+                print("Matches with post groups")
+                for m in matches_with_post_groups:
+                    print(m)
 
-        if debug:
-            print("Matches with extended groups")
-            for m in matches_with_extended_groups:
-                print(m)
+            matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
 
-        matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
+            if debug:
+                print("Matches with extended groups")
+                for m in matches_with_extended_groups:
+                    print(m)
 
-        if debug:
-            logger.info("multiline_matches with absolute offsets:{}".format(matches_with_absolute_offsets))
+            matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
 
-        result['matches'] = matches_with_absolute_offsets
+            if debug:
+                logger.info("multiline_matches with absolute offsets:{}".format(matches_with_absolute_offsets))
+
+            result['matches'] = matches_with_absolute_offsets
+        else:
+            # Import for testing. Later we will have construct
+            from utils.regex.sample import get_sample_hdfc_regex_token_set
+            from utils.regex.builder import RegexTextProcessor
+
+            regex_processor = RegexTextProcessor(get_sample_hdfc_regex_token_set())
+            regex_processor.data = text
+
+            regex_processor.process()
+            regex_processor.generate_matches_absolute()
+            result['matches'] = regex_processor.matches_with_absolute_offsets
 
     return result
 
