@@ -85,41 +85,54 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
     if not extrapolate:
         df = create_dataframe_from_matches(matches)
     else:
-        multiline_matches = get_multiline_post_para_offsets(matches, len(input_str))
+        extrapolate_new_approach = True
 
-        if debug:
-            print("Matches with post para")
-            for m in multiline_matches:
-                print(m)
+        if not extrapolate_new_approach:
+            multiline_matches = get_multiline_post_para_offsets(matches, len(input_str))
 
-        matches_with_post_groups = get_matches_with_group_relative_offsets(input_str, multiline_matches)
+            if debug:
+                print("Matches with post para")
+                for m in multiline_matches:
+                    print(m)
 
-        if debug:
-            print("Matches with post groups")
-            print_matches_with_post_groups(matches_with_post_groups)
+            matches_with_post_groups = get_matches_with_group_relative_offsets(input_str, multiline_matches)
 
-        # The extended groups are good for display for they loose the information required for combining
-        matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
+            if debug:
+                print("Matches with post groups")
+                print_matches_with_post_groups(matches_with_post_groups)
 
-        if debug:
-            print("Matches with Extended Groups:")
-            for m in multiline_matches:
-                print(m)
+            # The extended groups are good for display for they loose the information required for combining
+            matches_with_extended_groups = extend_match_groups_with_post_groups(matches_with_post_groups)
 
-        matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
-        if debug:
-            print("Matches with Absolute Offset in Groups:")
-            for m in multiline_matches:
-                print(m)
+            if debug:
+                print("Matches with Extended Groups:")
+                for m in multiline_matches:
+                    print(m)
 
-        matches_combined = combine_matches_with_post_groups(matches_with_post_groups,
-                                                            join_str=extp_join_str,
-                                                            debug=False)
+            matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
+            if debug:
+                print("Matches with Absolute Offset in Groups:")
+                for m in multiline_matches:
+                    print(m)
 
-        if debug:
-            print_combined_matches(matches_combined)
+            combined_matches = combine_matches_with_post_groups(matches_with_post_groups,
+                                                                join_str=extp_join_str,
+                                                                debug=False)
+            df = create_dataframe_from_combined_matches(combined_matches)
+        else:
+            # Import for testing. Later we will have construct
+            from utils.regex.sample import get_sample_hdfc_regex_token_set
+            from utils.regex.builder import RegexTextProcessor
 
-        df = create_dataframe_from_combined_matches(matches_combined)
+            regex_processor = RegexTextProcessor(get_sample_hdfc_regex_token_set())
+            regex_processor.data = input_str
+
+            regex_processor.process()
+            # regex_processor.generate_matches_absolute()
+            regex_processor.generate_frame_objects()
+
+            match_objects = regex_processor.frame_objects
+            df = pd.DataFrame(match_objects)
 
     if debug:
         print(df)
