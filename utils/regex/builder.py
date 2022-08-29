@@ -292,6 +292,11 @@ class RegexTokenSet(AbsRegex):
             buffer = join_str.join([buffer, token_str])
         return buffer
 
+    def get_token_by_name(self, token_name):
+        for regex_token in self.tokens:
+            if isinstance(regex_token, NamedToken) and regex_token.name == token_name:
+                return regex_token
+
 
 class FixedRegexTokenSet(RegexTokenSet):
     def __init__(self, *args, **kwargs):
@@ -464,6 +469,9 @@ class RegexTextProcessor:
 
                         match_token_mask = [r'.', group[1], group[2], group[3]]
                         token_masks.append(match_token_mask)
+
+                        main_regex_token = self.regex_token_set.get_token_by_name(group[3])
+                        print("main_regex_token={}".format(main_regex_token))
 
                         token_name_parts = group[3].split('__')
                         token_multiline = len(token_name_parts) > 1 and token_name_parts[1] == 'M'
