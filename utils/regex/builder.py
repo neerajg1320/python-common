@@ -503,7 +503,7 @@ class RegexTextProcessor:
                     print()
             else:
                 if shadow_pattern is not None:
-
+                    adjustment = 0
                     shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
 
                     if len(shadow_matches_in_line) < 1:
@@ -527,7 +527,7 @@ class RegexTextProcessor:
 
                     if len(shadow_matches_in_line) > 0:
                         shadow_line_data = {
-                            'adjustment': 0,
+                            'adjustment': adjustment,
                             'line_match': line['match'],
                             'matches_in_line': shadow_matches_in_line
                         }
