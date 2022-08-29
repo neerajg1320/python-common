@@ -493,6 +493,7 @@ class RegexTextProcessor:
                         if debug or False:
                             print("{:>3}:{}".format(line_num, match_text))
 
+    # We are currently generating separate match item for match line and shadow match line
     def generate_matches_absolute(self, debug=True):
         if debug:
             print("Generate Matches Absolute")
@@ -503,12 +504,12 @@ class RegexTextProcessor:
             shadow_lines = line_data['shadow_lines']
 
             line_absolute_offset = line_data['line_match'][1]
-
             # Lines can have multiple matches
             for match_data in matches_in_line:
                 # print(line_data)
                 self.matches_with_absolute_offsets.append(convert_absolute_offsets(match_data, line_absolute_offset))
 
+            # There can be multiple shadow lines
             for shadow_line_data in shadow_lines:
                 # print("{}".format(shadow_line_data))
                 matches_in_line = shadow_line_data["matches_in_line"]

@@ -65,7 +65,7 @@ def sample_hdfc_regex_text_processor(regex_token_set, text):
             print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_set'].regex_str()))
             print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_set'].shadow_token_set.regex_str()))
 
-    alignment_analysis = True
+    alignment_analysis = False
     if alignment_analysis:
         print("The Mask Map:")
         for index, line_data in enumerate(matched_lines_sample):
