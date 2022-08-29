@@ -108,7 +108,7 @@ class RegexToken(AbsRegex):
         return self._min_len
 
     @min_len.setter
-    def set_min_len(self, len):
+    def min_len(self, len):
         self._min_len = len
 
     @property
@@ -117,7 +117,7 @@ class RegexToken(AbsRegex):
         return self._max_len
 
     @max_len.setter
-    def set_max_len(self, len):
+    def max_len(self, len):
         self._max_len = len
 
     @property
@@ -197,20 +197,20 @@ class NamedToken(AbsRegex):
     @property
     def min_len(self):
         """Minimum Occurrences of the token"""
-        return self.regex_token.min_len
+        return self.regex_token._min_len
 
     @min_len.setter
-    def set_min_len(self, len):
-        self.regex_token.min_len = len
+    def min_len(self, len):
+        self.regex_token._min_len = len
 
     @property
     def max_len(self):
         """Maximum Occurrences of the token"""
-        return self.regex_token.max_len
+        return self.regex_token._max_len
 
     @max_len.setter
-    def set_max_len(self, len):
-        self.regex_token.max_len = len
+    def max_len(self, len):
+        self.regex_token._max_len = len
 
     @property
     def multiline(self):
@@ -226,6 +226,11 @@ class NamedToken(AbsRegex):
     def token(self):
         """Contained Regex Token"""
         return self.regex_token
+
+    @property
+    def alignment(self):
+        """Alignment of Values in Table"""
+        return self.regex_token.alignment
 
     def regex_str(self):
         return "(?P<{}>{})".format(self.name, self.regex_token.regex_str())
@@ -353,6 +358,22 @@ class FixedRegexTokenSet(RegexTokenSet):
 
         return self._shadow_token_set
 
+    def adjust_alignment(self, adjustment):
+        flag_prev_adjusted = False
+        for regex_token in self.tokens:
+            if flag_prev_adjusted:
+                if regex_token.min_len <= adjustment:
+                    raise RuntimeError("Error! adjustment={} is more than regex_token.min_len={}".format(adjustment, regex_token.min_len))
+                regex_token.min_len -= adjustment
+                regex_token.max_len -= adjustment
+                flag_prev_adjusted = False
+
+            if regex_token.multiline:
+                if regex_token.alignment == Alignment.LEFT:
+                    regex_token.min_len += adjustment
+                    regex_token.max_len += adjustment
+                    flag_prev_adjusted = True
+
 
 @dataclass
 class RegexTextProcessor:
@@ -377,6 +398,7 @@ class RegexTextProcessor:
         regex_str = self.regex_token_set.regex_str()
         pattern = re.compile(regex_str)
         shadow_pattern = None
+        shadow_token_set = None
 
         match_count = 0
         whitespace_line_count = 0
@@ -462,8 +484,6 @@ class RegexTextProcessor:
                         RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
-                    # match_data['line_num'] = line_num
-                    # match_data['line_match'] = line['match']
                     match_data['fixed_regex_token_set'] = line_regex_token_set
 
                     # Generate the shadow token set so that we can match the following lines
@@ -473,6 +493,7 @@ class RegexTextProcessor:
                         if debug:
                             print("Generated ShadowRegex:{}".format(shadow_regex_str))
                         shadow_pattern = re.compile(shadow_regex_str)
+                        shadow_token_set = line_regex_token_set.shadow_token_set
 
                 self.matched_lines_data.append(matched_line_data)
 
@@ -482,7 +503,9 @@ class RegexTextProcessor:
                     print()
             else:
                 if shadow_pattern is not None:
+
                     shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
+
                     if len(shadow_matches_in_line) > 0:
                         shadow_line_data = {'line_match': line['match'], 'matches_in_line': shadow_matches_in_line}
 
@@ -496,9 +519,20 @@ class RegexTextProcessor:
                     else:
                         if alignment_tolerance > 0:
                             print("Alignment Adjustment Tolerance={}".format(alignment_tolerance))
-                            
-                            for alignment_adjustment in range(1, alignment_tolerance+1):
-                                print("AlignmentAdjustment")
+
+                            alignment_tolerance = 4  # remove after unit testing
+                            for adjustment in range(4, 5):
+                                print("Shadow  :{}".format(shadow_token_set.regex_str()))
+                                # adjusted_shadow_token_set = copy.deepcopy(shadow_token_set)
+                                shadow_token_set.adjust_alignment(adjustment)
+                                print("Adjusted:{}".format(shadow_token_set.regex_str()))
+
+                                adjusted_shadow_pattern = re.compile(shadow_token_set.regex_str())
+                                shadow_matches_in_line = regex_pattern_apply_on_text(adjusted_shadow_pattern, match_text)
+                                if len(shadow_matches_in_line) > 0:
+                                    print("Found Match: {}".format(match_text))
+                                else:
+                                    print("Not Matched: {}".format(match_text))
 
 
     # We are currently generating separate match item for match line and shadow match line
@@ -545,7 +579,7 @@ class RegexTextProcessor:
                 matches_in_line = shadow_line_data["matches_in_line"]
                 for match_data in matches_in_line:
                     for group in match_data['groups']:
-                        print("Need to add '{}' in '{}'".format(group[0], group[3]))
+                        # print("Need to add '{}' in '{}'".format(group[0], group[3]))
                         match_object[group[3]] = join_str.join([match_object[group[3]], group[0]])
 
     @staticmethod
