@@ -4,6 +4,7 @@ from enum import Enum
 from .wildcard import get_wildcard_str
 from .patterns import is_regex_comment_pattern, get_regex_comment_pattern, is_whitespace
 from utils.regex_utils import regex_apply_on_text, regex_pattern_apply_on_text
+import copy
 
 
 class Alignment(Enum):
@@ -358,7 +359,8 @@ class RegexTextProcessor:
     regex_token_set: RegexTokenSet
     data: str = field(init=False, default=None)
     all_lines_with_offsets: list = field(default_factory=list, init=False)
-    matched_lines_data: list = field(default_factory=list, init=False)
+    matches_with_lines_data: list = field(default_factory=list, init=False)
+    matches_with_absolute_offsets: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
     def process(self, whitespace_line_tolerance=1, debug=False):
@@ -459,7 +461,7 @@ class RegexTextProcessor:
                             print("Generated ShadowRegex:{}".format(shadow_regex_str))
                         shadow_pattern = re.compile(shadow_regex_str)
 
-                self.matched_lines_data.append(matches_in_line)
+                self.matches_with_lines_data.append(matches_in_line)
 
                 if debug:
                     print("Token_masks:\n{}".format(token_masks))
@@ -471,3 +473,27 @@ class RegexTextProcessor:
                     if len(shadow_matches_in_line) > 0:
                         if debug:
                             print("{:>3}:{}".format(line_num, match_text))
+
+    def generate_matches_absolute(self):
+        for line_data in self.matches_with_lines_data:
+            # Lines can have multiple matches
+            for match_data in line_data:
+                # print(line_data)
+                line_data = match_data['line_match']
+                line_absolute_offset = line_data[1]
+                match_linestart_offset = match_data['match'][1]
+
+                match_absolute_offset = line_absolute_offset + match_linestart_offset
+
+                match_absolute_data = copy.deepcopy(match_data["match"])
+                groups_absolute_data = copy.deepcopy(match_data["groups"])
+
+                match_absolute_data[1] += match_absolute_offset
+                match_absolute_data[2] += match_absolute_offset
+
+                for g_idx, group in enumerate(groups_absolute_data):
+                    group[1] += match_absolute_offset
+                    group[2] += match_absolute_offset
+
+                match_data = {'match': match_absolute_data, 'groups': groups_absolute_data}
+                self.matches_with_absolute_offsets.append(match_data)
