@@ -354,7 +354,7 @@ class FixedRegexTokenSet(RegexTokenSet):
 
 
 @dataclass
-class RegexAnalyzer:
+class RegexTextProcessor:
     regex_token_set: RegexTokenSet
     data: str = field(init=False, default=None)
     lines_with_offsets: list = field(default_factory=list, init=False)
