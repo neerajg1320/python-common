@@ -396,6 +396,7 @@ class RegexTextProcessor:
 
             whitespace_line_count = 0
 
+            # We use this to match the line and in case of a match get full and group offsets
             matches_in_line = regex_pattern_apply_on_text(pattern, match_text)
 
             token_masks = []
@@ -405,7 +406,7 @@ class RegexTextProcessor:
                 if debug:
                     print("{:>3}:{}".format(line_num, match_text))
 
-                for line_match in matches_in_line:
+                for match_data in matches_in_line:
                     if debug:
                         print("{:>4}:line_num={}".format(match_count, line_num))
                         print("{}".format(match_text), end="")
@@ -415,7 +416,7 @@ class RegexTextProcessor:
                     # First token_mask
                     whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
                     token_masks.append(whitespace_token_mask)
-                    for g_idx, group in enumerate(line_match['groups']):
+                    for g_idx, group in enumerate(match_data['groups']):
                         if debug:
                             print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
 
@@ -446,8 +447,9 @@ class RegexTextProcessor:
                         RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
-                    line_match['line_num'] = line_num
-                    line_match['fixed_regex_token_set'] = line_regex_token_set
+                    match_data['line_num'] = line_num
+                    match_data['line_match'] = line['match']
+                    match_data['fixed_regex_token_set'] = line_regex_token_set
 
                     # Generate the shadow token set so that we can match the following lines
                     line_regex_token_set.generate_shadow_token_set()
