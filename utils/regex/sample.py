@@ -46,14 +46,13 @@ def sample_hdfc_regex_token_set(debug=False):
 
 def sample_hdfc_regex_text_processor(regex_token_set, text):
     regex_text_processor = RegexTextProcessor(regex_token_set)
-
     regex_text_processor.data = text
 
-    matched_lines = regex_text_processor.get_matched_data()
+    regex_text_processor.process()
 
     sample_offset = 0
     sample_size = 10
-    matches_lines_sample = matched_lines[sample_offset:sample_size]
+    matches_lines_sample = regex_text_processor.matched_lines_data[sample_offset:sample_size]
 
     for index, line_data in enumerate(matches_lines_sample):
         for l_match_data in line_data:
@@ -81,5 +80,5 @@ def sample_hdfc_regex_text_processor(regex_token_set, text):
             print("{}".format(l_match_data['fixed_regex_token_set'].token_type_len_str()))
     # The next stage we will fix the alignment for the columns
 
-    print("Total Matches: {}".format(len(matched_lines)))
+    print("Total Matches: {}".format(len(regex_text_processor.matched_lines_data)))
     return regex_text_processor

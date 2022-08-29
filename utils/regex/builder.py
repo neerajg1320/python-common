@@ -361,7 +361,7 @@ class RegexTextProcessor:
     matched_lines_data: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
-    def get_matched_data(self, whitespace_line_tolerance=1, debug=False):
+    def process(self, whitespace_line_tolerance=1, debug=False):
         if self.data is None:
             raise RuntimeError("get_matches_with_token_mask_builder(): data must be set before calling this function")
 
@@ -467,5 +467,3 @@ class RegexTextProcessor:
                     shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
                     if len(shadow_matches_in_line) > 0:
                         print("{:>3}:{}".format(line_num, match_text))
-
-        return self.matched_lines_data
