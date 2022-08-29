@@ -53,32 +53,32 @@ def sample_hdfc_analyzer(regex_token_set, text):
 
     sample_offset = 0
     sample_size = 10
-    sample_data = matched_lines[sample_offset:sample_size]
+    matches_lines_sample = matched_lines[sample_offset:sample_size]
 
-    for index, line_matches in enumerate(sample_data):
-        for l_match in line_matches:
-            print("[{:>4}]  LineNum:{}".format(index, l_match['line_num']))
-            print("    Match: {}".format(l_match['match']))
-            print("    Groups: {}".format(l_match['groups']))
+    for index, line_data in enumerate(matches_lines_sample):
+        for l_match_data in line_data:
+            print("[{:>4}]  LineNum:{}".format(index, l_match_data['line_num']))
+            print("    Match: {}".format(l_match_data['match']))
+            print("    Groups: {}".format(l_match_data['groups']))
             # print("    FixedRegexTokenSet: {}".format(l_match['fixed_regex_token_set']))
-            print("    FixedRegex:{}".format(l_match['fixed_regex_token_set'].regex_str()))
-            print("    ShadowRegex:{}".format(l_match['fixed_regex_token_set'].shadow_token_set.regex_str()))
+            print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_set'].regex_str()))
+            print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_set'].shadow_token_set.regex_str()))
 
     print("The Mask Map:")
-    for index, line_matches in enumerate(sample_data):
-        for l_match in line_matches:
-            print("{:>4}: {}".format(index, l_match['fixed_regex_token_set'].mask_str()))
-            print("{:>4}: {}".format(index, l_match['fixed_regex_token_set'].shadow_token_set.mask_str()))
+    for index, line_data in enumerate(matches_lines_sample):
+        for l_match_data in line_data:
+            print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_set'].mask_str()))
+            print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_set'].shadow_token_set.mask_str()))
 
     print("The Text Lines:")
-    for index, line_matches in enumerate(sample_data):
-        for l_match in line_matches:
-            print("{:>4}: {}".format(index, l_match['match'][0]))
+    for index, line_data in enumerate(matches_lines_sample):
+        for l_match_data in line_data:
+            print("{:>4}: {}".format(index, l_match_data['match'][0]))
 
     print("The Token Lengths Map:")
-    for index, line_matches in enumerate(sample_data):
-        for l_match in line_matches:
-            print("{}".format(l_match['fixed_regex_token_set'].token_type_len_str()))
+    for index, line_data in enumerate(matches_lines_sample):
+        for l_match_data in line_data:
+            print("{}".format(l_match_data['fixed_regex_token_set'].token_type_len_str()))
     # The next stage we will fix the alignment for the columns
 
     print("Total Matches: {}".format(len(matched_lines)))
