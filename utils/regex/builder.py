@@ -359,7 +359,7 @@ class RegexTextProcessor:
     regex_token_set: RegexTokenSet
     data: str = field(init=False, default=None)
     all_lines_with_offsets: list = field(default_factory=list, init=False)
-    matches_with_lines_data: list = field(default_factory=list, init=False)
+    matched_lines_data: list = field(default_factory=list, init=False)
     matches_with_absolute_offsets: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
@@ -406,8 +406,13 @@ class RegexTextProcessor:
 
             if len(matches_in_line) > 0:
                 match_count += 1
+
+                matched_line_data = {}
+
                 # We need this to attach the shadow lines data
-                current_matched_line_data = matches_in_line
+                current_matched_line_data = matched_line_data
+
+                matched_line_data['matches_in_line'] = matches_in_line
                 current_matched_line_data['shadow_lines'] = []
 
                 if debug:
@@ -466,7 +471,7 @@ class RegexTextProcessor:
                             print("Generated ShadowRegex:{}".format(shadow_regex_str))
                         shadow_pattern = re.compile(shadow_regex_str)
 
-                self.matches_with_lines_data.append(matches_in_line)
+                self.matched_lines_data.append(matched_line_data)
 
                 if debug:
                     print("Token_masks:\n{}".format(token_masks))
@@ -482,12 +487,14 @@ class RegexTextProcessor:
                     if current_matched_line_data is None:
                         raise RuntimeError("Got shadow_line when current_matched_line_data is None")
 
-                    current_matched_line_data['shadow_lines'].append(shadow_matches_in_line)
+                    # current_matched_line_data['shadow_lines'].append(shadow_matches_in_line)
 
     def generate_matches_absolute(self):
-        for line_data in self.matches_with_lines_data:
+        for line_data in self.matched_lines_data:
+            matches_in_lines = line_data['matches_in_lines']
+
             # Lines can have multiple matches
-            for match_data in line_data:
+            for match_data in matches_in_lines:
                 # print(line_data)
                 line_data = match_data['line_match']
                 line_absolute_offset = line_data[1]
