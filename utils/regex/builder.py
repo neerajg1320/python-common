@@ -506,6 +506,25 @@ class RegexTextProcessor:
 
                     shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
 
+                    if len(shadow_matches_in_line) < 1:
+                        if alignment_tolerance > 0 and True:
+
+                            for adjustment in range(1, alignment_tolerance+1):
+                                # print("Shadow  :{}".format(shadow_token_set.regex_str()))
+                                try:
+                                    shadow_token_set.adjust_alignment(1)
+                                    # print("Adjusted:{}".format(shadow_token_set.regex_str()))
+                                    adjusted_shadow_pattern = re.compile(shadow_token_set.regex_str())
+                                    shadow_matches_in_line = regex_pattern_apply_on_text(adjusted_shadow_pattern, match_text)
+                                    if len(shadow_matches_in_line) > 0:
+                                        print("Adjustment={} Found Match: {}".format(adjustment, match_text))
+                                        break
+                                except RuntimeError as e:
+                                    print(e)
+                                    break
+                                    
+                            shadow_token_set.adjust_alignment(-adjustment)
+
                     if len(shadow_matches_in_line) > 0:
                         shadow_line_data = {
                             'adjustment': 0,
@@ -520,31 +539,6 @@ class RegexTextProcessor:
 
                         if debug or False:
                             print("{:>3}:{}".format(line_num, match_text))
-                    else:
-                        if alignment_tolerance > 0 and True:
-                            # print("Alignment Adjustment Tolerance={}".format(alignment_tolerance))
-
-                            # alignment_tolerance = 4  # remove after unit testing
-
-                            for adjustment in range(1, alignment_tolerance+1):
-                                # print("Shadow  :{}".format(shadow_token_set.regex_str()))
-                                try:
-                                    shadow_token_set.adjust_alignment(1)
-
-                                    # print("Adjusted:{}".format(shadow_token_set.regex_str()))
-                                    adjusted_shadow_pattern = re.compile(shadow_token_set.regex_str())
-                                    shadow_matches_in_line = regex_pattern_apply_on_text(adjusted_shadow_pattern, match_text)
-                                    if len(shadow_matches_in_line) > 0:
-                                        print("Adjustment={} Found Match: {}".format(adjustment, match_text))
-                                        break
-                                except RuntimeError as e:
-                                    print(e)
-                                    # print("Adjustment={} AdjustedRegex={}".format(adjustment, shadow_token_set.regex_str()))
-                                    break
-
-                            # Now we reverse the adjustment
-                            # print("Reversing adjustment={}".format(adjustment))
-                            shadow_token_set.adjust_alignment(-adjustment)
 
     # We are currently generating separate match item for match line and shadow match line
     def generate_matches_absolute(self, debug=False):
