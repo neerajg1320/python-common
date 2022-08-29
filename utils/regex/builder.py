@@ -536,7 +536,7 @@ class RegexTextProcessor:
                                     adjusted_shadow_pattern = re.compile(shadow_token_set.regex_str())
                                     shadow_matches_in_line = regex_pattern_apply_on_text(adjusted_shadow_pattern, match_text)
                                     if len(shadow_matches_in_line) > 0:
-                                        print("Adjustment={} Found Match: {}".format(adjustment, match_text))
+                                        # print("Adjustment={} Found Match: {}".format(adjustment, match_text))
                                         break
                                 except RuntimeError as e:
                                     print(e)
