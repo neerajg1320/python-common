@@ -56,8 +56,8 @@ def sample_hdfc_regex_text_processor(regex_token_set, text):
 
     for index, line_data in enumerate(matches_lines_sample):
         for l_match_data in line_data:
-            print("[{:>4}]  LineNum:{}".format(index, l_match_data['line_num'], l_match_data['line_match']))
-            print("Full Line:{}".format(l_match_data['line_match']))
+            print("[{:>4}]  LineNum:{}".format(index, l_match_data['line_num']))
+            print("Full Line: {}".format(l_match_data['line_match']))
             print("    Match: {}".format(l_match_data['match']))
             print("    Groups: {}".format(l_match_data['groups']))
             # print("    FixedRegexTokenSet: {}".format(l_match['fixed_regex_token_set']))
