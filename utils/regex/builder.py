@@ -408,6 +408,7 @@ class RegexTextProcessor:
                 match_count += 1
 
                 matched_line_data = {
+                    'line_num': line_num,
                     'line_match': line['match'],
                     'matches_in_line': matches_in_line,
                     'shadow_lines': []
@@ -460,8 +461,8 @@ class RegexTextProcessor:
                         RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
-                    match_data['line_num'] = line_num
-                    match_data['line_match'] = line['match']
+                    # match_data['line_num'] = line_num
+                    # match_data['line_match'] = line['match']
                     match_data['fixed_regex_token_set'] = line_regex_token_set
 
                     # Generate the shadow token set so that we can match the following lines
@@ -482,14 +483,12 @@ class RegexTextProcessor:
                 if shadow_pattern is not None:
                     shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
                     if len(shadow_matches_in_line) > 0:
-                        shadow_line_data = {}
-                        shadow_line_data['line_match'] = line['match']
-                        shadow_line_data['matches_in_line'] = matches_in_line
+                        shadow_line_data = {'line_match': line['match'], 'matches_in_line': shadow_matches_in_line}
 
                         if current_matched_line_data is None:
                             raise RuntimeError("Got shadow_line when current_matched_line_data is None")
 
-                        current_matched_line_data['shadow_lines'].append(shadow_matches_in_line)
+                        current_matched_line_data['shadow_lines'].append(shadow_line_data)
 
                         if debug or False:
                             print("{:>3}:{}".format(line_num, match_text))
@@ -499,30 +498,38 @@ class RegexTextProcessor:
             print("Generate Matches Absolute")
 
         for line_data in self.matched_lines_data:
-            matches_in_lines = line_data['matches_in_line']
+            print(line_data)
+            matches_in_line = line_data['matches_in_line']
             shadow_lines = line_data['shadow_lines']
 
+            line_absolute_offset = line_data['line_match'][1]
+
             # Lines can have multiple matches
-            for match_data in matches_in_lines:
+            for match_data in matches_in_line:
                 # print(line_data)
-                line_data = match_data['line_match']
-                line_absolute_offset = line_data[1]
-                match_linestart_offset = match_data['match'][1]
+                self.matches_with_absolute_offsets.append(convert_absolute_offsets(match_data, line_absolute_offset))
 
-                match_absolute_offset = line_absolute_offset + match_linestart_offset
+            for shadow_line_data in shadow_lines:
+                # print("{}".format(shadow_line_data))
+                matches_in_line = shadow_line_data["matches_in_line"]
+                shadow_line_absolute_offset = shadow_line_data['line_match'][1]
+                for match_data in matches_in_line:
+                    # print(match_data)
+                    self.matches_with_absolute_offsets.append(convert_absolute_offsets(match_data, shadow_line_absolute_offset))
 
-                match_absolute_data = copy.deepcopy(match_data["match"])
-                groups_absolute_data = copy.deepcopy(match_data["groups"])
 
-                match_absolute_data[1] += match_absolute_offset
-                match_absolute_data[2] += match_absolute_offset
+def convert_absolute_offsets(match_data, line_absolute_offset):
+    match_linestart_offset = match_data['match'][1]
+    match_absolute_offset = line_absolute_offset + match_linestart_offset
 
-                for g_idx, group in enumerate(groups_absolute_data):
-                    group[1] += match_absolute_offset
-                    group[2] += match_absolute_offset
+    match_absolute_data = copy.deepcopy(match_data["match"])
+    groups_absolute_data = copy.deepcopy(match_data["groups"])
+    match_absolute_data[1] += match_absolute_offset
+    match_absolute_data[2] += match_absolute_offset
 
-                match_data = {'match': match_absolute_data, 'groups': groups_absolute_data}
-                self.matches_with_absolute_offsets.append(match_data)
+    for g_idx, group in enumerate(groups_absolute_data):
+        group[1] += match_absolute_offset
+        group[2] += match_absolute_offset
 
-            for shadow_line in shadow_lines:
-                print("{}".format(shadow_line))
+    return {'match': match_absolute_data, 'groups': groups_absolute_data}
+
