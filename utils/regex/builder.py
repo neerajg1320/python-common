@@ -173,6 +173,11 @@ class CompositeToken(AbsRegex):
             lines.append("token[{}]:{}".format(index, token))
         return "\n".join(lines)
 
+    @property
+    def multiline(self):
+        """If Token is Multiline"""
+        return self._multiline
+
     def regex_str(self):
         regexes = []
         for index, token in enumerate(self.tokens):
@@ -189,6 +194,9 @@ class NamedToken(AbsRegex):
 
         if not isinstance(name, str):
             raise RuntimeError("name must be string")
+
+        name_parts = name.split('__')
+        self.multiline = len(name_parts) > 1 and name_parts[1] == 'M'
         self.name = name
 
     def __str__(self):
@@ -216,6 +224,10 @@ class NamedToken(AbsRegex):
     def multiline(self):
         """If Token is Multiline"""
         return self.regex_token.multiline
+
+    @multiline.setter
+    def multiline(self, flag):
+        self.regex_token._multiline = flag
 
     @property
     def token_type(self):
@@ -471,14 +483,13 @@ class RegexTextProcessor:
                         token_masks.append(match_token_mask)
 
                         main_regex_token = self.regex_token_set.get_token_by_name(group[3])
-                        print("main_regex_token={}".format(main_regex_token))
-
-                        token_name_parts = group[3].split('__')
-                        token_multiline = len(token_name_parts) > 1 and token_name_parts[1] == 'M'
+                        # print("main_regex_token={}".format(main_regex_token))
 
                         line_regex_token_set.push_token(
                             NamedToken(
-                                RegexToken(Token.ANY_CHAR, len=match_token_mask[2] - match_token_mask[1], multiline=token_multiline),
+                                RegexToken(Token.ANY_CHAR,
+                                           len=match_token_mask[2] - match_token_mask[1],
+                                           multiline=main_regex_token.multiline),
                                 match_token_mask[3]
                             )
                         )
