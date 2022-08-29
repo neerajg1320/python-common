@@ -507,7 +507,7 @@ class RegexTextProcessor:
             # Lines can have multiple matches
             for match_data in matches_in_line:
                 # print(line_data)
-                self.matches_with_absolute_offsets.append(convert_absolute_offsets(match_data, line_absolute_offset))
+                self.matches_with_absolute_offsets.append(self.convert_absolute_offsets(match_data, line_absolute_offset))
 
             # There can be multiple shadow lines
             for shadow_line_data in shadow_lines:
@@ -516,21 +516,21 @@ class RegexTextProcessor:
                 shadow_line_absolute_offset = shadow_line_data['line_match'][1]
                 for match_data in matches_in_line:
                     # print(match_data)
-                    self.matches_with_absolute_offsets.append(convert_absolute_offsets(match_data, shadow_line_absolute_offset))
+                    self.matches_with_absolute_offsets.append(self.convert_absolute_offsets(match_data, shadow_line_absolute_offset))
 
+    @staticmethod
+    def convert_absolute_offsets(match_data, line_absolute_offset):
+        match_linestart_offset = match_data['match'][1]
+        match_absolute_offset = line_absolute_offset + match_linestart_offset
 
-def convert_absolute_offsets(match_data, line_absolute_offset):
-    match_linestart_offset = match_data['match'][1]
-    match_absolute_offset = line_absolute_offset + match_linestart_offset
+        match_absolute_data = copy.deepcopy(match_data["match"])
+        groups_absolute_data = copy.deepcopy(match_data["groups"])
+        match_absolute_data[1] += match_absolute_offset
+        match_absolute_data[2] += match_absolute_offset
 
-    match_absolute_data = copy.deepcopy(match_data["match"])
-    groups_absolute_data = copy.deepcopy(match_data["groups"])
-    match_absolute_data[1] += match_absolute_offset
-    match_absolute_data[2] += match_absolute_offset
+        for g_idx, group in enumerate(groups_absolute_data):
+            group[1] += match_absolute_offset
+            group[2] += match_absolute_offset
 
-    for g_idx, group in enumerate(groups_absolute_data):
-        group[1] += match_absolute_offset
-        group[2] += match_absolute_offset
-
-    return {'match': match_absolute_data, 'groups': groups_absolute_data}
+        return {'match': match_absolute_data, 'groups': groups_absolute_data}
 
