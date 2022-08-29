@@ -358,9 +358,11 @@ class FixedRegexTokenSet(RegexTokenSet):
 class RegexTextProcessor:
     regex_token_set: RegexTokenSet
     data: str = field(init=False, default=None)
+    status: str = field(init=False, default='NEW')
     all_lines_with_offsets: list = field(default_factory=list, init=False)
     matched_lines_data: list = field(default_factory=list, init=False)
     matches_with_absolute_offsets: list = field(default_factory=list, init=False)
+    frame_objects: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
     def process(self, whitespace_line_tolerance=1, debug=False):
@@ -494,12 +496,11 @@ class RegexTextProcessor:
                             print("{:>3}:{}".format(line_num, match_text))
 
     # We are currently generating separate match item for match line and shadow match line
-    def generate_matches_absolute(self, debug=True):
+    def generate_matches_absolute(self, debug=False):
         if debug:
             print("Generate Matches Absolute")
 
         for line_data in self.matched_lines_data:
-            print(line_data)
             matches_in_line = line_data['matches_in_line']
             shadow_lines = line_data['shadow_lines']
 
@@ -517,6 +518,33 @@ class RegexTextProcessor:
                 for match_data in matches_in_line:
                     # print(match_data)
                     self.matches_with_absolute_offsets.append(self.convert_absolute_offsets(match_data, shadow_line_absolute_offset))
+
+    def generate_frame(self, debug=False):
+        if debug:
+            print("Generate Frame")
+
+        for line_data in self.matched_lines_data:
+            matches_in_line = line_data['matches_in_line']
+            shadow_lines = line_data['shadow_lines']
+
+            # Lines can have multiple matches
+            for match_data in matches_in_line:
+                # print(line_data)
+                match_object = {}
+                for g_idx, group in match_data['groups']:
+                    match_object[group[3]] = group[0]
+                self.frame_objects.append(match_object)
+
+            # # There can be multiple shadow lines
+            # for shadow_line_data in shadow_lines:
+            #     # print("{}".format(shadow_line_data))
+            #     matches_in_line = shadow_line_data["matches_in_line"]
+            #     shadow_line_absolute_offset = shadow_line_data['line_match'][1]
+            #     for match_data in matches_in_line:
+            #         # print(match_data)
+            #         self.matches_with_absolute_offsets.append(self.convert_absolute_offsets(match_data, shadow_line_absolute_offset))
+
+
 
     @staticmethod
     def convert_absolute_offsets(match_data, line_absolute_offset):
