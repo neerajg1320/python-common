@@ -378,6 +378,7 @@ class RegexTextProcessor:
 
         match_count = 0
         whitespace_line_count = 0
+        current_matched_line_data = None
 
         for line_num, line in enumerate(self.all_lines_with_offsets, 1):
             match_text = line['match'][0]
@@ -405,6 +406,10 @@ class RegexTextProcessor:
 
             if len(matches_in_line) > 0:
                 match_count += 1
+                # We need this to attach the shadow lines data
+                current_matched_line_data = matches_in_line
+                current_matched_line_data['shadow_lines'] = []
+
                 if debug:
                     print("{:>3}:{}".format(line_num, match_text))
 
@@ -473,6 +478,11 @@ class RegexTextProcessor:
                     if len(shadow_matches_in_line) > 0:
                         if debug:
                             print("{:>3}:{}".format(line_num, match_text))
+
+                    if current_matched_line_data is None:
+                        raise RuntimeError("Got shadow_line when current_matched_line_data is None")
+
+                    current_matched_line_data['shadow_lines'].append(shadow_matches_in_line)
 
     def generate_matches_absolute(self):
         for line_data in self.matches_with_lines_data:
