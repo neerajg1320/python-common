@@ -365,7 +365,7 @@ class RegexTextProcessor:
     frame_objects: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
-    def process(self, whitespace_line_tolerance=1, debug=False):
+    def process(self, whitespace_line_tolerance=1, alignment_tolerance=6, debug=False):
         if self.data is None:
             raise RuntimeError("get_matches_with_token_mask_builder(): data must be set before calling this function")
 
@@ -395,7 +395,6 @@ class RegexTextProcessor:
             if is_whitespace(match_text):
                 whitespace_line_count += 1
                 if whitespace_line_count > whitespace_line_tolerance:
-                    # print("whitespace_line_count={}".format(whitespace_line_count))
                     shadow_pattern = None
                 continue
 
@@ -494,6 +493,13 @@ class RegexTextProcessor:
 
                         if debug or False:
                             print("{:>3}:{}".format(line_num, match_text))
+                    else:
+                        if alignment_tolerance > 0:
+                            print("Alignment Adjustment Tolerance={}".format(alignment_tolerance))
+                            
+                            for alignment_adjustment in range(1, alignment_tolerance+1):
+                                print("AlignmentAdjustment")
+
 
     # We are currently generating separate match item for match line and shadow match line
     def generate_matches_absolute(self, debug=False):
