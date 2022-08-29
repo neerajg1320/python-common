@@ -407,15 +407,16 @@ class RegexTextProcessor:
             if len(matches_in_line) > 0:
                 match_count += 1
 
-                matched_line_data = {}
+                matched_line_data = {
+                    'line_match': line['match'],
+                    'matches_in_line': matches_in_line,
+                    'shadow_lines': []
+                }
 
                 # We need this to attach the shadow lines data
                 current_matched_line_data = matched_line_data
 
-                matched_line_data['matches_in_line'] = matches_in_line
-                current_matched_line_data['shadow_lines'] = []
-
-                if debug:
+                if debug or False:
                     print("{:>3}:{}".format(line_num, match_text))
 
                 for match_data in matches_in_line:
@@ -481,17 +482,25 @@ class RegexTextProcessor:
                 if shadow_pattern is not None:
                     shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
                     if len(shadow_matches_in_line) > 0:
-                        if debug:
+                        shadow_line_data = {}
+                        shadow_line_data['line_match'] = line['match']
+                        shadow_line_data['matches_in_line'] = matches_in_line
+
+                        if current_matched_line_data is None:
+                            raise RuntimeError("Got shadow_line when current_matched_line_data is None")
+
+                        current_matched_line_data['shadow_lines'].append(shadow_matches_in_line)
+
+                        if debug or False:
                             print("{:>3}:{}".format(line_num, match_text))
 
-                    if current_matched_line_data is None:
-                        raise RuntimeError("Got shadow_line when current_matched_line_data is None")
+    def generate_matches_absolute(self, debug=True):
+        if debug:
+            print("Generate Matches Absolute")
 
-                    # current_matched_line_data['shadow_lines'].append(shadow_matches_in_line)
-
-    def generate_matches_absolute(self):
         for line_data in self.matched_lines_data:
-            matches_in_lines = line_data['matches_in_lines']
+            matches_in_lines = line_data['matches_in_line']
+            shadow_lines = line_data['shadow_lines']
 
             # Lines can have multiple matches
             for match_data in matches_in_lines:
@@ -514,3 +523,6 @@ class RegexTextProcessor:
 
                 match_data = {'match': match_absolute_data, 'groups': groups_absolute_data}
                 self.matches_with_absolute_offsets.append(match_data)
+
+            for shadow_line in shadow_lines:
+                print("{}".format(shadow_line))

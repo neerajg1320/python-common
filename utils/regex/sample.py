@@ -52,17 +52,19 @@ def sample_hdfc_regex_text_processor(regex_token_set, text):
 
     sample_offset = 0
     sample_size = 10
-    matches_lines_sample = regex_text_processor.matched_lines_data[sample_offset:sample_size]
+    matched_lines_sample = regex_text_processor.matched_lines_data[sample_offset:sample_size]
 
-    for index, line_data in enumerate(matches_lines_sample):
-        for l_match_data in line_data:
-            print("[{:>4}]  LineNum:{}".format(index, l_match_data['line_num']))
-            print("Full Line: {}".format(l_match_data['line_match']))
-            print("    Match: {}".format(l_match_data['match']))
-            print("    Groups: {}".format(l_match_data['groups']))
-            # print("    FixedRegexTokenSet: {}".format(l_match['fixed_regex_token_set']))
-            print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_set'].regex_str()))
-            print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_set'].shadow_token_set.regex_str()))
+    for index, matched_line in enumerate(matched_lines_sample):
+        print(matched_line)
+
+        # for l_match_data in line_data:
+        #     print("[{:>4}]  LineNum:{}".format(index, l_match_data['line_num']))
+        #     print("Full Line: {}".format(l_match_data['line_match']))
+        #     print("    Match: {}".format(l_match_data['match']))
+        #     print("    Groups: {}".format(l_match_data['groups']))
+        #     # print("    FixedRegexTokenSet: {}".format(l_match['fixed_regex_token_set']))
+        #     print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_set'].regex_str()))
+        #     print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_set'].shadow_token_set.regex_str()))
 
     alignment_analysis = False
     if alignment_analysis:
