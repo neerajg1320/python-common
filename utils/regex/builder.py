@@ -402,7 +402,8 @@ class RegexTextProcessor:
 
             if len(matches_in_line) > 0:
                 match_count += 1
-                print("{:>3}:{}".format(line_num, match_text))
+                if debug:
+                    print("{:>3}:{}".format(line_num, match_text))
 
                 for line_match in matches_in_line:
                     if debug:
@@ -466,4 +467,5 @@ class RegexTextProcessor:
                 if shadow_pattern is not None:
                     shadow_matches_in_line = regex_pattern_apply_on_text(shadow_pattern, match_text)
                     if len(shadow_matches_in_line) > 0:
-                        print("{:>3}:{}".format(line_num, match_text))
+                        if debug:
+                            print("{:>3}:{}".format(line_num, match_text))
