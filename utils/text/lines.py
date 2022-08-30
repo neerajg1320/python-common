@@ -181,7 +181,7 @@ def extend_match_groups_with_post_groups(matches):
 
 # After combining: The offsets have not much meaning
 # we get a joined string along wit group name
-def combine_matches_with_post_groups(matches, join_str="\n", add_blank_post_groups=False, debug=False):
+def combine_matches_with_post_groups(matches, join_str="\n", shadow_trim=False, add_shadow_blank_groups=False, debug=False):
     # print_matches_with_post_groups(matches)
     matches_combined = []
     for m in matches:
@@ -206,7 +206,11 @@ def combine_matches_with_post_groups(matches, join_str="\n", add_blank_post_grou
                     if debug:
                         print("Ignored:post group for '{}' is blank".format(c_group['name']))
                 else:
-                    c_group['text'] = join_str.join([c_group['text'], pg[0]])
+                    shadow_group_str = pg[0]
+                    if shadow_trim:
+                        shadow_group_str = shadow_group_str.strip()
+
+                    c_group['text'] = join_str.join([c_group['text'], shadow_group_str])
                     c_group['offsets_list'].append([pg[1], pg[2]])
 
         matches_combined.append(m_combined)

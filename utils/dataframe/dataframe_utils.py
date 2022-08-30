@@ -73,6 +73,7 @@ def create_dataframe_from_combined_matches(matches):
 def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
                                extrapolate=False,
                                shadow_join_str="\n",
+                               shadow_trim=False,
                                debug=False):
     result = regex_apply_on_text(regex_str, input_str, flags=flags)
     matches = result['matches']
@@ -117,6 +118,7 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
 
             combined_matches = combine_matches_with_post_groups(matches_with_post_groups,
                                                                 join_str=shadow_join_str,
+                                                                shadow_trim=shadow_trim,
                                                                 debug=False)
             df = create_dataframe_from_combined_matches(combined_matches)
         else:
@@ -131,7 +133,7 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
             regex_processor.data = input_str
 
             regex_processor.process()
-            regex_processor.generate_frame_objects(shadow_join_str=shadow_join_str)
+            regex_processor.generate_frame_objects(shadow_join_str=shadow_join_str, shadow_trim=shadow_trim)
 
             match_objects = regex_processor.frame_objects
             df = pd.DataFrame(match_objects)
