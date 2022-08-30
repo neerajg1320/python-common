@@ -86,7 +86,8 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
     if not extrapolate:
         df = create_dataframe_from_matches(matches)
     else:
-        extrapolate_new_approach = True
+        # TBD: The processor will work only if the Tokens are supported
+        extrapolate_new_approach = False
 
         if not extrapolate_new_approach:
             multiline_matches = get_multiline_post_para_offsets(matches, len(input_str))
