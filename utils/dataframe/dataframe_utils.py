@@ -72,7 +72,7 @@ def create_dataframe_from_combined_matches(matches):
 # Also we get the dataframe and the offsets
 def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
                                extrapolate=False,
-                               extp_join_str="\n",
+                               shadow_join_str="\n",
                                debug=False):
     result = regex_apply_on_text(regex_str, input_str, flags=flags)
     matches = result['matches']
@@ -116,10 +116,12 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
                     print(m)
 
             combined_matches = combine_matches_with_post_groups(matches_with_post_groups,
-                                                                join_str=extp_join_str,
+                                                                join_str=shadow_join_str,
                                                                 debug=False)
             df = create_dataframe_from_combined_matches(combined_matches)
         else:
+            # TBD: Need to create generate_token_set_from_regex function
+
             # Import for testing. Later we will have construct
             from utils.regex.sample import get_sample_hdfc_regex_token_set
             from utils.regex.builder import RegexTextProcessor
@@ -129,13 +131,13 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
             regex_processor.data = input_str
 
             regex_processor.process()
-            regex_processor.generate_frame_objects()
+            regex_processor.generate_frame_objects(shadow_join_str=shadow_join_str)
 
             match_objects = regex_processor.frame_objects
             df = pd.DataFrame(match_objects)
 
-    if debug:
-        print(df)
+    if debug or True:
+        df_print(df)
 
     return df
 
