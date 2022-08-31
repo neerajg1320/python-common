@@ -636,9 +636,35 @@ class RegexDictionary:
     def __post_init__(self):
         self.tokens.append(RegexToken(Token.DATE_YY))
         self.tokens.append(RegexToken(Token.DATE_YYYY))
+        self.tokens.append(RegexToken(Token.NUMBER))
+        # We need a different logic for detecting phrases as they can consume other tokens if space gap is 1
+        # self.tokens.append(RegexToken(Token.PHRASE))
+        self.tokens.append(RegexToken(Token.WORD))
+        self.tokens.append(RegexToken(Token.WHITESPACE_HORIZONTAL))
 
     def __str__(self):
         return "\n".join(map(lambda x: "{}:{}".format(type(x).__name__, str(x)), self.tokens))
+
+    def token_first(self, text):
+        match_count = 0
+        for token in self.tokens:
+            token_regex_str = "^{}".format(token.regex_str())
+            # print("token_regex_str='{}' text='{}'".format(token_regex_str, text))
+            token_pattern = re.compile(token_regex_str)
+
+            matches = regex_pattern_apply_on_text(token_pattern, text)
+            match_count = len(matches)
+            if len(matches) > 0:
+                break
+
+        if match_count != 1:
+            raise RuntimeError("Error! found {} tokens. need to fix token detection logic to find exactly one".format(len(matches)))
+
+        token_match = matches[0]['match']
+
+        # print("token={} token_match={}".format(token, token_match))
+        return token, token_match
+
 
 @dataclass
 class RegexGenerator:
@@ -647,11 +673,22 @@ class RegexGenerator:
     def __str__(self):
         return "Regex Dictionary: {}".format(self.regex_dictionary)
 
-    def generate(self, text):
-        regex_tokens = [
-            RegexToken(Token.DATE_YY),
-            RegexToken(Token.WHITESPACE_HORIZONTAL, len=1)
-        ]
+    def get_tokens(self, text):
 
-        for token in regex_tokens:
-            yield token
+        start_offset = 0
+        text_len = len(text)
+
+        while start_offset < text_len:
+            rem_text = text[start_offset:]
+            # print("start_offset={} rem_text='{}'".format(start_offset, rem_text))
+
+            token, token_match = self.regex_dictionary.token_first(rem_text)
+            token_match_len = token_match[2] - token_match[1]
+
+            match_token = copy.deepcopy(token)
+            match_token.min_len = token_match_len
+            match_token.max_len = token_match_len
+
+            start_offset += token_match_len
+
+            yield match_token
