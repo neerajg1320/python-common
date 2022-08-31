@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 import re
 from enum import Enum
 from .wildcard import get_wildcard_str
@@ -628,12 +629,8 @@ class RegexTextProcessor:
         return {'match': match_absolute_data, 'groups': groups_absolute_data}
 
 
-
-from typing import List
-
 @dataclass
 class RegexDictionary:
-    # tokens: list = field(init=False, default_factory=list)
     tokens: List[RegexToken] = field(init=False, default_factory=list)
 
     def __post_init__(self):
@@ -642,3 +639,19 @@ class RegexDictionary:
 
     def __str__(self):
         return "\n".join(map(lambda x: "{}:{}".format(type(x).__name__, str(x)), self.tokens))
+
+@dataclass
+class RegexGenerator:
+    regex_dictionary: RegexDictionary
+
+    def __str__(self):
+        return "Regex Dictionary: {}".format(self.regex_dictionary)
+
+    def generate(self, text):
+        regex_tokens = [
+            RegexToken(Token.DATE_YY),
+            RegexToken(Token.WHITESPACE_HORIZONTAL, len=1)
+        ]
+
+        for token in regex_tokens:
+            yield token
