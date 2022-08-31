@@ -98,7 +98,7 @@ class RegexToken(AbsRegex):
 
     def __str__(self):
         return "(r'{}', {}, {}, {})".format(
-            self.pattern_str,
+            self.token if self.token is not None else self.pattern_str,
             self._min_len,
             self._max_len,
             'M' if self._multiline else 'S'
