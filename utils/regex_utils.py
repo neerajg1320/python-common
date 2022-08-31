@@ -33,7 +33,7 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
     result = regex_apply_on_text(regex_str, text, flags=flags)
 
     if extrapolate:
-        extrapolate_new_approach = True
+        extrapolate_new_approach = False
 
         if not extrapolate_new_approach:
             multiline_matches = get_multiline_post_para_offsets(result['matches'], len(text))
