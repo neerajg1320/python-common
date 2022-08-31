@@ -779,3 +779,20 @@ class RegexGenerator:
             # detect phrases
 
             start_offset += token_match_len
+
+    def generate_tokens_and_verify_regex(self, line_text):
+        regex_line_token_set = RegexTokenSet(flag_full_line=True)
+
+        print("Generate Tokens:")
+        for token, value in self.generate_tokens(line_text):
+            print("Token Match:{} Value={}".format(token, value))
+            regex_line_token_set.push_token(token)
+
+        # Create regex from generated tokens
+        line_regex_str = regex_line_token_set.regex_str()
+        print("Regex:{}".format(regex_line_token_set.regex_str()))
+
+        matches = regex_apply_on_text(line_regex_str, line_text)['matches']
+        if len(matches) > 0:
+            print("The regex generation is successful")
+            print(matches)
