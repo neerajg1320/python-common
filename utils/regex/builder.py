@@ -627,3 +627,18 @@ class RegexTextProcessor:
 
         return {'match': match_absolute_data, 'groups': groups_absolute_data}
 
+
+
+from typing import List
+
+@dataclass
+class RegexDictionary:
+    # tokens: list = field(init=False, default_factory=list)
+    tokens: List[RegexToken] = field(init=False, default_factory=list)
+
+    def __post_init__(self):
+        self.tokens.append(RegexToken(Token.DATE_YY))
+        self.tokens.append(RegexToken(Token.DATE_YYYY))
+
+    def __str__(self):
+        return "\n".join(map(lambda x: "{}:{}".format(type(x).__name__, str(x)), self.tokens))
