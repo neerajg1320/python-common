@@ -4,6 +4,7 @@ from enum import Enum
 from .wildcard import get_wildcard_str
 from .patterns import is_regex_comment_pattern, get_regex_comment_pattern, is_whitespace
 from utils.regex_utils import regex_apply_on_text, regex_pattern_apply_on_text
+from utils.regex.patterns import get_line_matches_from_text
 import copy
 
 
@@ -409,9 +410,6 @@ class RegexTextProcessor:
 
         # TBD: Can be made as a routine
         # We leave the \n out of the match even though we match the whole line
-        # result = regex_apply_on_text('^.*$', self.data, flags={"multiline": 1})
-        # self.all_lines_with_offsets = result["matches"]
-        from utils.regex.patterns import get_line_matches_from_text
         self.all_lines_with_offsets = get_line_matches_from_text(self.data)
 
         regex_str = self.regex_token_set.regex_str()

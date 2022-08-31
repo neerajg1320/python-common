@@ -23,8 +23,8 @@ def get_regex_comment_pattern():
 
 
 def get_line_matches_from_text(text, newline_include=False):
-    line_regex_str = "^.*$"
+    line_regex_str = r"^.*$"
     if newline_include:
-        "".join([line_regex_str, "\\n"])
+        line_regex_str = "".join([line_regex_str, r"\n"])
     result = regex_apply_on_text(line_regex_str, text, flags={"multiline": 1})
     return result["matches"]
