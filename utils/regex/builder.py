@@ -605,7 +605,7 @@ class RegexTextProcessor:
                     for group in match_data['groups']:
                         # print("Need to add '{}' in '{}'".format(group[0], group[3]))
                         shadow_group_str = group[0]
-                        print("shadow_trim:{}".format(shadow_trim))
+                        # print("shadow_trim:{}".format(shadow_trim))
                         if shadow_trim:
                             shadow_group_str = shadow_group_str.strip()
                             print("shadow_group_str={}".format(shadow_group_str))

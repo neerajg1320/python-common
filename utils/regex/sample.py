@@ -97,6 +97,7 @@ def sample_hdfc_regex_text_processor(regex_token_set, text):
     print("DataFrame:")
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_colwidth', None)
+    pd.set_option('display.width', None)
     print(df)
 
     print("Total Matches: {}".format(len(regex_text_processor.matched_lines_data)))
