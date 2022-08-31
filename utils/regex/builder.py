@@ -676,7 +676,6 @@ class RegexGenerator:
 
     @staticmethod
     def create_phrase_token(phrase_tokens, debug=False):
-        # if len(phrase_tokens) > 2:
         token_len = 0
 
         for item in phrase_tokens:
@@ -702,9 +701,11 @@ class RegexGenerator:
 
         while start_offset < text_len:
             rem_text = text[start_offset:]
-            # print("start_offset={} rem_text='{}'".format(start_offset, rem_text))
 
             regex_token, token_match = self.regex_dictionary.token_first(rem_text)
+            # Set the offset from the start of the text
+            token_match[1] += start_offset
+            token_match[2] += start_offset
 
             token_match_len = token_match[2] - token_match[1]
 
@@ -737,21 +738,29 @@ class RegexGenerator:
 
             if phrase_lookup_ended:
                 if phrase_word_count > 1:
-                    last_space_item = phrase_tokens[-1]
-                    phrase_tokens = phrase_tokens[:-1]
+                    # If last item in the phrase_tokens is a space then that space is not part of phrase
+                    last_space_item = None
+                    if phrase_tokens[-1]['token'].token == Token.WHITESPACE_HORIZONTAL:
+                        last_space_item = phrase_tokens[-1]
+                        phrase_tokens = phrase_tokens[:-1]
+
                     phrase_token = self.create_phrase_token(phrase_tokens)
-                    phrase_match = text[phrase_start_offset : phrase_start_offset + phrase_token.max_len]
-                    if debug or True:
-                        print("phrase_token={} token_match='{}'".format(phrase_token, phrase_match))
-                    yield phrase_token
-                    if debug or True:
-                        print("last_space_token={} token_match='{}'".format(last_space_item['token'], last_space_item['value']))
-                    yield last_space_item['token']
+                    phrase_token_match = [text[phrase_start_offset : phrase_start_offset + phrase_token.max_len],
+                                          phrase_start_offset,
+                                          phrase_start_offset + phrase_token.max_len]
+                    if debug:
+                        print("phrase_token={} token_match='{}'".format(phrase_token, phrase_token_match))
+                    yield phrase_token, phrase_token_match
+
+                    if last_space_item is not None:
+                        if debug:
+                            print("last_space_token={} token_match='{}'".format(last_space_item['token'], last_space_item['value']))
+                        yield last_space_item['token'], last_space_item['value']
                 else:
                     for item in phrase_tokens:
-                        if debug or True:
+                        if debug:
                             print("match_token={} token_match='{}'".format(item['token'], item['value']))
-                        yield item['token']
+                        yield item['token'], item['value']
 
                 phrase_lookup_started = False
                 phrase_lookup_ended = False
@@ -761,6 +770,6 @@ class RegexGenerator:
             start_offset += token_match_len
 
             if not phrase_lookup_started:
-                if debug or True:
+                if debug:
                     print("match_token={} token_match='{}'".format(match_token, token_match))
-                yield match_token
+                yield match_token, token_match
