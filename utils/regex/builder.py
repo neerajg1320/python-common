@@ -693,11 +693,12 @@ class RegexGenerator:
         start_offset = 0
         text_len = len(text)
 
-        phrase_start_offset = -1
-        phrase_lookup_started = False
-        phrase_lookup_ended = False
-        phrase_tokens = []
-        phrase_word_count = 0
+        if detect_phrases:
+            phrase_start_offset = -1
+            phrase_lookup_started = False
+            phrase_lookup_ended = False
+            phrase_tokens = []
+            phrase_word_count = 0
 
         while start_offset < text_len:
             rem_text = text[start_offset:]
