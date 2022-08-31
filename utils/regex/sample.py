@@ -47,7 +47,7 @@ def get_sample_hdfc_regex_token_set(debug=False):
     return regex_token_set
 
 
-def sample_hdfc_regex_text_processor(regex_token_set, text):
+def apply_regex_token_set(regex_token_set, text):
     regex_text_processor = RegexTextProcessor(regex_token_set)
     regex_text_processor.data = text
 
@@ -91,7 +91,7 @@ def sample_hdfc_regex_text_processor(regex_token_set, text):
     for index, line_final in enumerate(regex_text_processor.matches_with_absolute_offsets[sample_offset:sample_size]):
         print(line_final)
 
-    regex_text_processor.generate_frame_objects()
+    regex_text_processor.generate_frame_objects(shadow_trim=True)
 
     df = pd.DataFrame(regex_text_processor.frame_objects)
     print("DataFrame:")

@@ -608,7 +608,7 @@ class RegexTextProcessor:
                         # print("shadow_trim:{}".format(shadow_trim))
                         if shadow_trim:
                             shadow_group_str = shadow_group_str.strip()
-                            print("shadow_group_str={}".format(shadow_group_str))
+                            # print("shadow_group_str={}".format(shadow_group_str))
                         match_object[group[3]] = shadow_join_str.join([match_object[group[3]], shadow_group_str])
 
     @staticmethod
