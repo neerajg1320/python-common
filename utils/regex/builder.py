@@ -634,10 +634,10 @@ class RegexDictionary:
     tokens: List[RegexToken] = field(init=False, default_factory=list)
 
     def __post_init__(self):
-        self.tokens.append(RegexToken(Token.DATE_YY))
         self.tokens.append(RegexToken(Token.DATE_YYYY))
+        self.tokens.append(RegexToken(Token.DATE_YY))
         self.tokens.append(RegexToken(Token.NUMBER))
-        # We need a different logic for detecting phrases as they can consume other tokens if space gap is 1
+        # Phrases are detected by combining words
         # self.tokens.append(RegexToken(Token.PHRASE))
         self.tokens.append(RegexToken(Token.WORD))
         self.tokens.append(RegexToken(Token.WHITESPACE_HORIZONTAL))
@@ -676,17 +676,21 @@ class RegexGenerator:
 
     @staticmethod
     def create_phrase_token(phrase_tokens, debug=False):
+        # if len(phrase_tokens) > 2:
         token_len = 0
 
-        for token in phrase_tokens:
+        for item in phrase_tokens:
             if debug:
-                print("token={}".format(token))
-            token_len += token.max_len
+                print("token={}".format(item['token']))
+            token_len += item['token'].max_len
 
         return RegexToken(Token.PHRASE, len=token_len)
 
-    def generate_tokens(self, text, debug=False):
+    @staticmethod
+    def add_to_phrase_tokens(token_list, token, value, offset):
+        token_list.append({'token': token, 'value': value, 'offset': offset})
 
+    def generate_tokens(self, text, debug=False):
         start_offset = 0
         text_len = len(text)
 
@@ -709,7 +713,8 @@ class RegexGenerator:
             match_token.max_len = token_match_len
 
             if regex_token.token == Token.WORD:
-                phrase_tokens.append(match_token)
+                self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
+                # phrase_tokens.append(match_token)
                 if debug:
                     print("Added token '{}' to phrase".format(match_token))
                 if not phrase_lookup_started:
@@ -720,7 +725,8 @@ class RegexGenerator:
             elif regex_token.token == Token.WHITESPACE_HORIZONTAL:
                 if phrase_lookup_started:
                     if token_match_len <= self.phrase_space_tolerance:
-                        phrase_tokens.append(match_token)
+                        self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
+                        # phrase_tokens.append(match_token)
                         if debug:
                             print("Added token '{}' to phrase".format(match_token))
                     else:
@@ -731,14 +737,21 @@ class RegexGenerator:
 
             if phrase_lookup_ended:
                 if phrase_word_count > 1:
+                    last_space_item = phrase_tokens[-1]
+                    phrase_tokens = phrase_tokens[:-1]
                     phrase_token = self.create_phrase_token(phrase_tokens)
                     phrase_match = text[phrase_start_offset : phrase_start_offset + phrase_token.max_len]
-                    if debug:
+                    if debug or True:
                         print("phrase_token={} token_match='{}'".format(phrase_token, phrase_match))
                     yield phrase_token
+                    if debug or True:
+                        print("last_space_token={} token_match='{}'".format(last_space_item['token'], last_space_item['value']))
+                    yield last_space_item['token']
                 else:
-                    for token in phrase_tokens:
-                        yield token
+                    for item in phrase_tokens:
+                        if debug or True:
+                            print("match_token={} token_match='{}'".format(item['token'], item['value']))
+                        yield item['token']
 
                 phrase_lookup_started = False
                 phrase_lookup_ended = False
@@ -748,6 +761,6 @@ class RegexGenerator:
             start_offset += token_match_len
 
             if not phrase_lookup_started:
-                if debug:
+                if debug or True:
                     print("match_token={} token_match='{}'".format(match_token, token_match))
                 yield match_token
