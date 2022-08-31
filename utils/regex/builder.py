@@ -689,7 +689,7 @@ class RegexGenerator:
     def add_to_phrase_tokens(token_list, token, value, offset):
         token_list.append({'token': token, 'value': value, 'offset': offset})
 
-    def generate_tokens(self, text, debug=False):
+    def generate_tokens(self, text, detect_phrases=True, debug=False):
         start_offset = 0
         text_len = len(text)
 
@@ -713,63 +713,69 @@ class RegexGenerator:
             match_token.min_len = token_match_len
             match_token.max_len = token_match_len
 
-            if regex_token.token == Token.WORD:
-                self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
-                # phrase_tokens.append(match_token)
-                if debug:
-                    print("Added token '{}' to phrase".format(match_token))
-                if not phrase_lookup_started:
-                    phrase_lookup_started = True
-                    phrase_start_offset = start_offset
-                # Increment the phrase word count
-                phrase_word_count += 1
-            elif regex_token.token == Token.WHITESPACE_HORIZONTAL:
-                if phrase_lookup_started:
-                    if token_match_len <= self.phrase_space_tolerance:
-                        self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
-                        # phrase_tokens.append(match_token)
-                        if debug:
-                            print("Added token '{}' to phrase".format(match_token))
-                    else:
-                        phrase_lookup_ended = True
-            else:
-                if phrase_lookup_started:
-                    phrase_lookup_ended = True
-
-            if phrase_lookup_ended:
-                if phrase_word_count > 1:
-                    # If last item in the phrase_tokens is a space then that space is not part of phrase
-                    last_space_item = None
-                    if phrase_tokens[-1]['token'].token == Token.WHITESPACE_HORIZONTAL:
-                        last_space_item = phrase_tokens[-1]
-                        phrase_tokens = phrase_tokens[:-1]
-
-                    phrase_token = self.create_phrase_token(phrase_tokens)
-                    phrase_token_match = [text[phrase_start_offset : phrase_start_offset + phrase_token.max_len],
-                                          phrase_start_offset,
-                                          phrase_start_offset + phrase_token.max_len]
-                    if debug:
-                        print("phrase_token={} token_match='{}'".format(phrase_token, phrase_token_match))
-                    yield phrase_token, phrase_token_match
-
-                    if last_space_item is not None:
-                        if debug:
-                            print("last_space_token={} token_match='{}'".format(last_space_item['token'], last_space_item['value']))
-                        yield last_space_item['token'], last_space_item['value']
-                else:
-                    for item in phrase_tokens:
-                        if debug:
-                            print("match_token={} token_match='{}'".format(item['token'], item['value']))
-                        yield item['token'], item['value']
-
-                phrase_lookup_started = False
-                phrase_lookup_ended = False
-                phrase_word_count = 0
-                phrase_tokens.clear()
-
-            start_offset += token_match_len
-
-            if not phrase_lookup_started:
+            if not detect_phrases:
                 if debug:
                     print("match_token={} token_match='{}'".format(match_token, token_match))
                 yield match_token, token_match
+            else:
+                if regex_token.token == Token.WORD:
+                    self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
+                    # phrase_tokens.append(match_token)
+                    if debug:
+                        print("Added token '{}' to phrase".format(match_token))
+                    if not phrase_lookup_started:
+                        phrase_lookup_started = True
+                        phrase_start_offset = start_offset
+                    # Increment the phrase word count
+                    phrase_word_count += 1
+                elif regex_token.token == Token.WHITESPACE_HORIZONTAL:
+                    if phrase_lookup_started:
+                        if token_match_len <= self.phrase_space_tolerance:
+                            self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
+                            # phrase_tokens.append(match_token)
+                            if debug:
+                                print("Added token '{}' to phrase".format(match_token))
+                        else:
+                            phrase_lookup_ended = True
+                else:
+                    if phrase_lookup_started:
+                        phrase_lookup_ended = True
+
+                if phrase_lookup_ended:
+                    if phrase_word_count > 1:
+                        # If last item in the phrase_tokens is a space then that space is not part of phrase
+                        last_space_item = None
+                        if phrase_tokens[-1]['token'].token == Token.WHITESPACE_HORIZONTAL:
+                            last_space_item = phrase_tokens[-1]
+                            phrase_tokens = phrase_tokens[:-1]
+
+                        phrase_token = self.create_phrase_token(phrase_tokens)
+                        phrase_token_match = [text[phrase_start_offset : phrase_start_offset + phrase_token.max_len],
+                                              phrase_start_offset,
+                                              phrase_start_offset + phrase_token.max_len]
+                        if debug:
+                            print("phrase_token={} token_match='{}'".format(phrase_token, phrase_token_match))
+                        yield phrase_token, phrase_token_match
+
+                        if last_space_item is not None:
+                            if debug:
+                                print("last_space_token={} token_match='{}'".format(last_space_item['token'], last_space_item['value']))
+                            yield last_space_item['token'], last_space_item['value']
+                    else:
+                        for item in phrase_tokens:
+                            if debug:
+                                print("match_token={} token_match='{}'".format(item['token'], item['value']))
+                            yield item['token'], item['value']
+
+                    phrase_lookup_started = False
+                    phrase_lookup_ended = False
+                    phrase_word_count = 0
+                    phrase_tokens.clear()
+
+                if not phrase_lookup_started:
+                    if debug:
+                        print("match_token={} token_match='{}'".format(match_token, token_match))
+                    yield match_token, token_match
+            # detect phrases
+
+            start_offset += token_match_len
