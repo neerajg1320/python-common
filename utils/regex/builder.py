@@ -19,7 +19,7 @@ class Alignment(Enum):
 #               before being added to the regex
 class Token(Enum):
     DATE_YYYY = {"pattern_str": r"\d{2}/\d{2}/\d{4}", "min_len": 10, "max_len": 10, "wildcard": False,
-                 "abbr": "DY4", "hash": "D1"}
+                 "abbr": "DY4", "hash": "D4"}
     DATE_YY = {"pattern_str": r"\d{2}/\d{2}/\d{2}", "min_len": 8, "max_len": 8, "wildcard": False,
                "abbr": "DY2", "hash": "D2"}
     NUMBER = {"pattern_str": r"(?:\d[,.\d]*)?\d", "min_len": 1, "max_len": None, "wildcard": False,
@@ -29,9 +29,9 @@ class Token(Enum):
     PHRASE = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False,
               "abbr": "PHR", "hash": "P"}
     WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True,
-                             "abbr": "WSH", "hash": "W1"}
+                             "abbr": "WSH", "hash": "S"}
     WHITESPACE_ANY = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True,
-                      "abbr": "WSA", "hash": "W2"}
+                      "abbr": "WSA", "hash": "SA"}
     ANY_CHAR = {"pattern_str": r".", "min_len": 1, "max_len": None, "wildcard": True,
                 "abbr": "ANY", "hash": "A"}
     # TBD: The CUSTOM token details shall be defined at the time of the definition
