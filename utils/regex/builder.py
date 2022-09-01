@@ -18,17 +18,31 @@ class Alignment(Enum):
 # wc: wildcard. This means that the pattern_str has to be appended with *, +, {len}, {min,max}
 #               before being added to the regex
 class Token(Enum):
-    DATE_YYYY = {"pattern_str": r"\d{2}/\d{2}/\d{4}", "min_len": 10, "max_len": 10, "wildcard": False, "abbr": "DY4"}
-    DATE_YY = {"pattern_str": r"\d{2}/\d{2}/\d{2}", "min_len": 8, "max_len": 8, "wildcard": False, "abbr": "DY2"}
-    NUMBER = {"pattern_str": r"(?:\d[,.\d]*)?\d", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "NUM"}
-    WORD = {"pattern_str": r"\S+", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "WRD"}
-    PHRASE = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "PHR"}
-    WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True, "abbr": "WSH"}
-    WHITESPACE_ANY = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True, "abbr": "WSA"}
-    ANY_CHAR = {"pattern_str": r".", "min_len": 1, "max_len": None, "wildcard": True, "abbr": "ANY"}
+    DATE_YYYY = {"pattern_str": r"\d{2}/\d{2}/\d{4}", "min_len": 10, "max_len": 10, "wildcard": False,
+                 "abbr": "DY4", "hash": "D1"}
+    DATE_YY = {"pattern_str": r"\d{2}/\d{2}/\d{2}", "min_len": 8, "max_len": 8, "wildcard": False,
+               "abbr": "DY2", "hash": "D2"}
+    NUMBER = {"pattern_str": r"(?:\d[,.\d]*)?\d", "min_len": 1, "max_len": None, "wildcard": False,
+              "abbr": "NUM", "hash": "N"}
+    WORD = {"pattern_str": r"\S+", "min_len": 1, "max_len": None, "wildcard": False,
+            "abbr": "WRD", "hash": "W"}
+    PHRASE = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False,
+              "abbr": "PHR", "hash": "P"}
+    WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True,
+                             "abbr": "WSH", "hash": "W1"}
+    WHITESPACE_ANY = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True,
+                      "abbr": "WSA", "hash": "W2"}
+    ANY_CHAR = {"pattern_str": r".", "min_len": 1, "max_len": None, "wildcard": True,
+                "abbr": "ANY", "hash": "A"}
+    # TBD: The CUSTOM token details shall be defined at the time of the definition
+    CUSTOM = {"pattern_str": None, "min_len": None, "max_len": None, "wildcard": False,
+              "abbr": None, "hash": None}
 
     def __str__(self):
         return self.value["abbr"]
+
+    def hash_str(self):
+        return self.value["hash"]
 
 
 class AbsRegex:
@@ -156,6 +170,13 @@ class RegexToken(AbsRegex):
             return "{}{{{}}}".format(self.token, self.max_len)
         else:
             return self.regex_str()
+
+    def token_hash_str(self):
+        if self.token is not None:
+            return "{}".format(self.token.hash_str())
+        else:
+            raise RuntimeError("Hash for non-enum tokens has to be supported")
+
 
 class CombineOperator(Enum):
     AND = {"str": ""}
@@ -300,6 +321,10 @@ class RegexTokenSet(AbsRegex):
             tokens_regex_str = "^{}$".format(tokens_regex_str)
 
         return tokens_regex_str
+
+    def token_hash_str(self):
+        tokens_str = "-".join(map(lambda tkn: tkn.token_hash_str(), self.tokens))
+        return tokens_str
 
     def token_str(self):
         tokens_str = "".join(map(lambda tkn: tkn.token_str(), self.tokens))
@@ -833,6 +858,21 @@ class RegexGenerator:
 
             line_token_seq = self.generate_token_sequence_and_verify_regex(line_text)
             print("{:>4}:{}".format(line_num, line_token_seq.token_str()))
+
+        text_token_set_map = {}
+
+        return text_token_set_map
+
+    def generate_regex_token_hash_map_from_text(self, text):
+        sample_offset = 0
+        sample_size = 1000000
+        lines_with_offsets = get_line_matches_from_text(text)[sample_offset:sample_offset+sample_size]
+        for line_num, line_data in enumerate(lines_with_offsets, 1):
+            line_text = line_data['match'][0]
+            # print("{:>4}:{}".format(line_num, line_text))
+
+            line_token_seq = self.generate_token_sequence_and_verify_regex(line_text)
+            print("{:>4}:{}".format(line_num, line_token_seq.token_hash_str()))
 
         text_token_set_map = {}
 
