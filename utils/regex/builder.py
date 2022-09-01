@@ -18,8 +18,8 @@ class Alignment(Enum):
 # wc: wildcard. This means that the pattern_str has to be appended with *, +, {len}, {min,max}
 #               before being added to the regex
 class Token(Enum):
-    DATE_YYYY = {"pattern_str": r"\d[\d/]{8}\d", "min_len": 10, "max_len": 10, "wildcard": False, "abbr": "DY4"}
-    DATE_YY = {"pattern_str": r"\d[\d/]{6}\d", "min_len": 8, "max_len": 8, "wildcard": False, "abbr": "DY2"}
+    DATE_YYYY = {"pattern_str": r"\d{2}/\d{2}/\d{4}", "min_len": 10, "max_len": 10, "wildcard": False, "abbr": "DY4"}
+    DATE_YY = {"pattern_str": r"\d{2}/\d{2}/\d{2}", "min_len": 8, "max_len": 8, "wildcard": False, "abbr": "DY2"}
     NUMBER = {"pattern_str": r"(?:\d[,.\d]*)?\d", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "NUM"}
     WORD = {"pattern_str": r"\S+", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "WRD"}
     PHRASE = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "PHR"}
