@@ -18,14 +18,17 @@ class Alignment(Enum):
 # wc: wildcard. This means that the pattern_str has to be appended with *, +, {len}, {min,max}
 #               before being added to the regex
 class Token(Enum):
-    DATE_YY = {"pattern_str": r"\d[\d/]{6}\d", "min_len": 8, "max_len": 8, "wildcard": False}
-    DATE_YYYY = {"pattern_str": r"\d[\d/]{8}\d", "min_len": 10, "max_len": 10, "wildcard": False}
-    NUMBER = {"pattern_str": r"(?:\d[,.\d]*)?\d", "min_len": 1, "max_len": None, "wildcard": False}
-    WORD = {"pattern_str": r"\S+", "min_len": 1, "max_len": None, "wildcard": False}
-    PHRASE = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False}
-    WHITESPACE_ANY = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True}
-    WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True}
-    ANY_CHAR = {"pattern_str": r".", "min_len": 1, "max_len": None, "wildcard": True}
+    DATE_YYYY = {"pattern_str": r"\d[\d/]{8}\d", "min_len": 10, "max_len": 10, "wildcard": False, "abbr": "DY4"}
+    DATE_YY = {"pattern_str": r"\d[\d/]{6}\d", "min_len": 8, "max_len": 8, "wildcard": False, "abbr": "DY2"}
+    NUMBER = {"pattern_str": r"(?:\d[,.\d]*)?\d", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "NUM"}
+    WORD = {"pattern_str": r"\S+", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "WRD"}
+    PHRASE = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False, "abbr": "PHR"}
+    WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True, "abbr": "WSH"}
+    WHITESPACE_ANY = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True, "abbr": "WSA"}
+    ANY_CHAR = {"pattern_str": r".", "min_len": 1, "max_len": None, "wildcard": True, "abbr": "ANY"}
+
+    def __str__(self):
+        return self.value["abbr"]
 
 
 class AbsRegex:
@@ -148,6 +151,11 @@ class RegexToken(AbsRegex):
 
         return token_regex_str
 
+    def token_str(self):
+        if self.token is not None:
+            return "{}{{{}}}".format(self.token, self.max_len)
+        else:
+            return self.regex_str()
 
 class CombineOperator(Enum):
     AND = {"str": ""}
@@ -292,6 +300,10 @@ class RegexTokenSet(AbsRegex):
             tokens_regex_str = "^{}$".format(tokens_regex_str)
 
         return tokens_regex_str
+
+    def token_str(self):
+        tokens_str = "".join(map(lambda tkn: tkn.token_str(), self.tokens))
+        return tokens_str
 
     def token_type_len_str(self, fill_char="X", whitespace_char="S", join_str=" ", alignment=3, debug=False):
         buffer = ""
@@ -781,19 +793,32 @@ class RegexGenerator:
 
             start_offset += token_match_len
 
-    def generate_tokens_and_verify_regex(self, line_text):
-        regex_line_token_set = RegexTokenSet(flag_full_line=True)
+    def generate_token_sequence_and_verify_regex(self, line_text, debug=False):
+        # Used for unit testing, to be placed in generate_tokens call
+        # line_text_skewed = line_text[:-2]
 
-        print("Generate Tokens:")
+        regex_line_token_seq = RegexTokenSet(flag_full_line=True)
+
+        if debug:
+            print("Generate Tokens:")
         for token, value in self.generate_tokens(line_text):
-            print("Token Match:{} Value={}".format(token, value))
-            regex_line_token_set.push_token(token)
+            if debug:
+                print("Token Match:{} Value={}".format(token, value))
+            regex_line_token_seq.push_token(token)
 
         # Create regex from generated tokens
-        line_regex_str = regex_line_token_set.regex_str()
-        print("Regex:{}".format(regex_line_token_set.regex_str()))
+        line_regex_str = regex_line_token_seq.regex_str()
+        if debug:
+            print("Regex Str:{}".format(regex_line_token_seq.regex_str()))
+            print("Tokens Str:{}".format(regex_line_token_seq.token_str()))
 
         matches = regex_apply_on_text(line_regex_str, line_text)['matches']
         if len(matches) > 0:
-            print("The regex generation is successful")
-            print(matches)
+            if debug:
+                print("The regex generation is successful")
+                print(matches)
+        else:
+            raise RuntimeError("The generated regex '{}' did not produce match with input text '{}'".
+                               format(line_regex_str, line_text))
+
+        return regex_line_token_seq
