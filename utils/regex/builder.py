@@ -822,3 +822,18 @@ class RegexGenerator:
                                format(line_regex_str, line_text))
 
         return regex_line_token_seq
+
+    def generate_regex_token_sequence_map_from_text(self, text):
+        sample_offset = 0
+        sample_size = 1000000
+        lines_with_offsets = get_line_matches_from_text(text)[sample_offset:sample_offset+sample_size]
+        for line_num, line_data in enumerate(lines_with_offsets, 1):
+            line_text = line_data['match'][0]
+            # print("{:>4}:{}".format(line_num, line_text))
+
+            line_token_seq = self.generate_token_sequence_and_verify_regex(line_text)
+            print("{:>4}:{}".format(line_num, line_token_seq.token_str()))
+
+        text_token_set_map = {}
+
+        return text_token_set_map
