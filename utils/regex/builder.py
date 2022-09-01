@@ -177,6 +177,8 @@ class RegexToken(AbsRegex):
         else:
             raise RuntimeError("Hash for non-enum tokens has to be supported")
 
+    def is_whitespace(self):
+        return self.token == Token.WHITESPACE_HORIZONTAL or self.token == Token.WHITESPACE_ANY
 
 class CombineOperator(Enum):
     AND = {"str": ""}
@@ -848,32 +850,27 @@ class RegexGenerator:
 
         return regex_line_token_seq
 
-    def generate_regex_token_sequence_map_from_text(self, text):
+    def generate_regex_token_sets_from_text(self, text):
         sample_offset = 0
         sample_size = 1000000
         lines_with_offsets = get_line_matches_from_text(text)[sample_offset:sample_offset+sample_size]
         for line_num, line_data in enumerate(lines_with_offsets, 1):
             line_text = line_data['match'][0]
-            # print("{:>4}:{}".format(line_num, line_text))
-
             line_token_seq = self.generate_token_sequence_and_verify_regex(line_text)
-            print("{:>4}:{}".format(line_num, line_token_seq.token_str()))
+            yield {"num": line_num, "text": line_text, 'token_sequence': line_token_seq}
 
-        text_token_set_map = {}
+    def generate_regex_token_hashes_from_text(self, text):
+        for item in self.generate_regex_token_sets_from_text(text):
+            item.update({'token_hash': item['token_sequence'].token_hash_str()})
+            yield item
 
-        return text_token_set_map
+    def get_token_hash_map(self, text):
+        token_hash_map = {}
+        for item in self.generate_regex_token_hashes_from_text(text):
+            key = item['token_hash']
+            if key not in token_hash_map:
+                token_hash_map[key] = []
+            token_hash_map[key].append(item)
+        return token_hash_map
 
-    def generate_regex_token_hash_map_from_text(self, text):
-        sample_offset = 0
-        sample_size = 1000000
-        lines_with_offsets = get_line_matches_from_text(text)[sample_offset:sample_offset+sample_size]
-        for line_num, line_data in enumerate(lines_with_offsets, 1):
-            line_text = line_data['match'][0]
-            # print("{:>4}:{}".format(line_num, line_text))
 
-            line_token_seq = self.generate_token_sequence_and_verify_regex(line_text)
-            print("{:>4}:{}".format(line_num, line_token_seq.token_hash_str()))
-
-        text_token_set_map = {}
-
-        return text_token_set_map
