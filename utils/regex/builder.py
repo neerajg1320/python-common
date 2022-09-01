@@ -324,8 +324,25 @@ class RegexTokenSet(AbsRegex):
 
         return tokens_regex_str
 
-    def token_hash_str(self):
-        tokens_str = "-".join(map(lambda tkn: tkn.token_hash_str(), self.tokens))
+    def token_hash_str(self, trim_trail=True, trim_head=True):
+        if trim_trail:
+            trail_count = 0
+            for regex_token in reversed(self.tokens):
+                if regex_token.is_whitespace():
+                    trail_count += 1
+                else:
+                    break
+
+        if trim_head:
+            head_count = 0
+            for regex_token in self.tokens:
+                if regex_token.is_whitespace():
+                    head_count += 1
+                else:
+                    break
+
+        size = len(self.tokens)
+        tokens_str = "-".join(map(lambda tkn: tkn.token_hash_str(), self.tokens[head_count:size-trail_count]))
         return tokens_str
 
     def token_str(self):
