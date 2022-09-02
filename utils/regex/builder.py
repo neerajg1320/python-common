@@ -324,12 +324,12 @@ class RegexTokenSet(AbsRegex):
 
         return tokens_regex_str
 
-    def token_hash_str(self, trim_trail=True, trim_head=True, trail_alignment_tolerance=6, head_alignment_tolerance=4):
-        if trim_trail:
+    def token_hash_str(self, trim_tail=True, trim_head=True, tail_alignment_tolerance=6, head_alignment_tolerance=4):
+        if trim_tail:
             trail_count = 0
             for regex_token in reversed(self.tokens):
                 if regex_token.is_whitespace():
-                    if regex_token.max_len <= trail_alignment_tolerance:
+                    if regex_token.max_len <= tail_alignment_tolerance:
                         trail_count += 1
                 else:
                     break
