@@ -26,7 +26,8 @@ class Token(Enum):
               "abbr": "NUM", "hash": "N"}
     WORD = {"pattern_str": r"\S+", "min_len": 1, "max_len": None, "wildcard": False,
             "abbr": "WRD", "hash": "W"}
-    PHRASE = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False,
+    # A phrase currently has a minimum of two words
+    PHRASE = {"pattern_str": r"\S+(?:\s\S+)+", "min_len": 1, "max_len": None, "wildcard": False,
               "abbr": "PHR", "hash": "P"}
     WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True,
                              "abbr": "WSH", "hash": "S"}
