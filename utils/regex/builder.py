@@ -888,8 +888,8 @@ class RegexGenerator:
         for item in self.generate_regex_token_hashes_from_text(text):
             key = item['token_hash']
             if key not in token_hash_map:
-                token_hash_map[key] = []
-            token_hash_map[key].append(item)
+                token_hash_map[key] = {'items': []}
+            token_hash_map[key]['items'].append(item)
         return token_hash_map
 
 
