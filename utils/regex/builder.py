@@ -167,7 +167,10 @@ class RegexToken(AbsRegex):
 
     def token_str(self):
         if self.token is not None:
-            return "{}{{{}}}".format(self.token, self.max_len)
+            if self.min_len == self.max_len:
+                return "{}{{{}}}".format(self.token, self.max_len)
+            else:
+                return "{}{{{},{}}}".format(self.token, self.min_len, self.max_len)
         else:
             return self.regex_str()
 
@@ -324,27 +327,27 @@ class RegexTokenSet(AbsRegex):
 
         return tokens_regex_str
 
-    def token_hash_str(self, trim_tail=True, trim_head=True, tail_alignment_tolerance=6, head_alignment_tolerance=4):
+    def token_hash_str(self, trim_tail=False, trim_head=False, tail_alignment_tolerance=6, head_alignment_tolerance=4):
+        tail_remove_count = 0
         if trim_tail:
-            trail_count = 0
             for regex_token in reversed(self.tokens):
                 if regex_token.is_whitespace():
                     if regex_token.max_len <= tail_alignment_tolerance:
-                        trail_count += 1
+                        tail_remove_count += 1
                 else:
                     break
 
+        head_remove_count = 0
         if trim_head:
-            head_count = 0
             for regex_token in self.tokens:
                 if regex_token.is_whitespace():
                     if regex_token.max_len <= head_alignment_tolerance:
-                        head_count += 1
+                        head_remove_count += 1
                 else:
                     break
 
         size = len(self.tokens)
-        tokens_str = "-".join(map(lambda tkn: tkn.token_hash_str(), self.tokens[head_count:size-trail_count]))
+        tokens_str = "-".join(map(lambda tkn: tkn.token_hash_str(), self.tokens[head_remove_count:size-tail_remove_count]))
         return tokens_str
 
     def token_str(self):
@@ -368,6 +371,32 @@ class RegexTokenSet(AbsRegex):
         for regex_token in self.tokens:
             if isinstance(regex_token, NamedToken) and regex_token.name == token_name:
                 return regex_token
+
+    def trim(self, tail_alignment_tolerance=6, head_alignment_tolerance=4):
+
+        tail_remove_count = 0
+        for regex_token in reversed(self.tokens):
+            if regex_token.is_whitespace():
+                if regex_token.max_len <= tail_alignment_tolerance:
+                    tail_remove_count += 1
+            else:
+                break
+
+        head_remove_count = 0
+        for regex_token in self.tokens:
+            if regex_token.is_whitespace():
+                if regex_token.max_len <= head_alignment_tolerance:
+                    head_remove_count += 1
+            else:
+                break
+
+        size = len(self.tokens)
+        trimmed_tokens = self.tokens[head_remove_count:size-tail_remove_count]
+
+        trimmed_regex_token_set = RegexTokenSet()
+        trimmed_regex_token_set.tokens = trimmed_tokens
+
+        return trimmed_regex_token_set
 
 
 class FixedRegexTokenSet(RegexTokenSet):
@@ -885,10 +914,30 @@ class RegexGenerator:
 
     def get_token_hash_map(self, text):
         token_hash_map = {}
-        for item in self.generate_regex_token_hashes_from_text(text):
+        for index, item in enumerate(self.generate_regex_token_hashes_from_text(text)):
             key = item['token_hash']
             if key not in token_hash_map:
-                token_hash_map[key] = {'items': []}
+                group_token_sequence = copy.deepcopy(item['token_sequence'])
+                print("index:{} group_token_sequence='{}'".format(index, group_token_sequence.token_str()))
+                # TBD: This happens in case line has no char. Need to check if we should assign a token
+                if group_token_sequence.token_str() == '':
+                    print(group_token_sequence)
+                token_hash_map[key] = {'group_token_sequence': group_token_sequence, 'items': []}
+
+            group_token_sequence = token_hash_map[key]['group_token_sequence']
+            item_token_sequence = item['token_sequence']
+
+            try:
+                for token_index in range(len(group_token_sequence.tokens)):
+                    if group_token_sequence.tokens[token_index].min_len > item_token_sequence.tokens[token_index].min_len:
+                        group_token_sequence.tokens[token_index].min_len = item_token_sequence.tokens[token_index].min_len
+                    if group_token_sequence.tokens[token_index].max_len < item_token_sequence.tokens[token_index].max_len:
+                        group_token_sequence.tokens[token_index].max_len = item_token_sequence.tokens[token_index].max_len
+            except IndexError as e:
+                print("IndexError:")
+                print("group_token_sequence:{}".format(group_token_sequence.token_str()))
+                print(" item_token_sequence:{}".format(item_token_sequence.token_str()))
+
             token_hash_map[key]['items'].append(item)
         return token_hash_map
 
