@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Dict
 import re
 from enum import Enum
 from .wildcard import get_wildcard_str
@@ -408,6 +408,21 @@ class RegexTokenSet(AbsRegex):
 
         return trimmed_regex_token_set
 
+    def is_similar(self, second_token_set):
+        print("  Self Tokens:\n{}".format(self.token_str()))
+        print("Second Tokens:\n{}".format(second_token_set.token_str()))
+
+        if len(self.tokens) != len(second_token_set.tokens):
+            return False
+
+        for idx, regex_token in enumerate(self.tokens):
+            second_regex_token = second_token_set.tokens[idx]
+            if regex_token.token != second_regex_token.token:
+                print("Token mismatch {} and {}".format(regex_token.token, second_regex_token.token))
+                return False
+
+        return True
+
 
 class FixedRegexTokenSet(RegexTokenSet):
     def __init__(self, *args, **kwargs):
@@ -769,20 +784,53 @@ class RegexDictionary:
 
 @dataclass
 class RegexTokenMap:
-    token_sequence_map = {}
+    token_sequence_map: Dict = field(init=False, default_factory=dict)
 
-    def get_or_create_entry(self, line_item):
-        key = line_item['token_hash']
+    def get_or_create_similar(self, line_item):
+        token_hash_key = line_item['token_hash']
+        token_sequence = line_item['token_sequence']
 
-        if key not in self.token_sequence_map:
-            group_token_sequence = copy.deepcopy(line_item['token_sequence'])
-            print("LineNum:{} group_token_sequence='{}'".format(line_item['num'], group_token_sequence.token_str()))
-            # TBD: This happens in case line has no char. Need to check if we should assign a token
-            if group_token_sequence.token_str() == '':
-                print(group_token_sequence)
-            self.token_sequence_map[key] = {'group_token_sequence': group_token_sequence, 'line_items': []}
+        flag_match = False
+        for key, token_map_entry in self.token_sequence_map.items():
+            group_token_sequence = token_map_entry['group_token_sequence']
+            if group_token_sequence.is_similar(token_sequence):
+                flag_match = True
+                break
 
-        return self.token_sequence_map[key]
+        if not flag_match:
+            self.create_new_token_map_entry(line_item, token_hash_key)
+
+        return self.token_sequence_map[token_hash_key]
+
+    def get_or_create_exact(self, line_item):
+        token_hash_key = line_item['token_hash']
+        if token_hash_key not in self.token_sequence_map:
+            self.create_new_token_map_entry(line_item, token_hash_key)
+
+        return self.token_sequence_map[token_hash_key]
+
+    def create_new_token_map_entry(self, line_item, token_hash_key):
+        group_token_sequence = copy.deepcopy(line_item['token_sequence'])
+        print("New Entry: LineNum:{} group_token_sequence='{}'".format(line_item['num'], group_token_sequence.token_str()))
+        # TBD: This happens in case line has no char. Need to check if we should assign a token
+        if group_token_sequence.token_str() == '':
+            print(group_token_sequence)
+
+        self.token_sequence_map[token_hash_key] = {'group_token_sequence': group_token_sequence, 'line_items': []}
+
+    def get_or_create_entry(self, line_item, strategy='exact'):
+        if strategy == 'exact':
+            token_map_entry = self.get_or_create_exact(line_item)
+        elif strategy == 'similar':
+            token_map_entry = self.get_or_create_similar(line_item)
+        else:
+            raise RuntimeError("strategy '{}' not supported".format(strategy))
+
+        return token_map_entry
+
+    # TBD: Check how to create an iterator class
+    def items(self):
+        return self.token_sequence_map.items()
 
 
 @dataclass
@@ -962,18 +1010,12 @@ class RegexGenerator:
 
     def generate_token_hash_map(self, text):
         # TBD: This can be class
-        token_hash_map = {}
-        for line_item in self.generate_regex_token_hashes_from_text(text):
-            key = line_item['token_hash']
-            if key not in token_hash_map:
-                group_token_sequence = copy.deepcopy(line_item['token_sequence'])
-                print("LineNum:{} group_token_sequence='{}'".format(line_item['num'], group_token_sequence.token_str()))
-                # TBD: This happens in case line has no char. Need to check if we should assign a token
-                if group_token_sequence.token_str() == '':
-                    print(group_token_sequence)
-                token_hash_map[key] = {'group_token_sequence': group_token_sequence, 'line_items': []}
+        token_hash_map = RegexTokenMap()
 
-            group_token_sequence = token_hash_map[key]['group_token_sequence']
+        for line_item in self.generate_regex_token_hashes_from_text(text):
+            token_hash_map_entry = token_hash_map.get_or_create_entry(line_item, strategy='similar')
+
+            group_token_sequence = token_hash_map_entry['group_token_sequence']
             item_token_sequence = line_item['token_sequence']
 
             try:
@@ -987,7 +1029,8 @@ class RegexGenerator:
                 print("group_token_sequence:{}".format(group_token_sequence.token_str()))
                 print(" item_token_sequence:{}".format(item_token_sequence.token_str()))
 
-            token_hash_map[key]['line_items'].append(line_item)
+            token_hash_map_entry['line_items'].append(line_item)
+
         return token_hash_map
 
 
