@@ -36,6 +36,8 @@ class Token(Enum):
     # A phrase currently has a minimum of two words
     PHRASE = {"pattern_str": r"\S+(?:\s\S+)+", "min_len": 1, "max_len": None, "wildcard": False,
               "abbr": "PHR", "hash": "P"}
+    PHRASE_OR_WORD = {"pattern_str": r"\S+(?:\s\S+)*", "min_len": 1, "max_len": None, "wildcard": False,
+                      "abbr": "PHW", "hash": "P"}
     WHITESPACE_HORIZONTAL = {"pattern_str": r"[ ]", "min_len": 1, "max_len": None, "wildcard": True,
                              "abbr": "WSH", "hash": "S"}
     # WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True,
@@ -158,6 +160,10 @@ class RegexToken(AbsRegex):
     def token_type(self):
         """Type of RegexToken like DATE, NUMBER etc"""
         return self.token
+
+    def set_token(self, token):
+        self.token = token
+        self.pattern_str = token.value['pattern_str']
 
     # TBD: Check how should we handle the case where min_len=0 and max_len=0 as well.
     def regex_str(self):
@@ -337,27 +343,8 @@ class RegexTokenSet(AbsRegex):
 
         return tokens_regex_str
 
-    def token_hash_str(self, trim_tail=False, trim_head=False, tail_alignment_tolerance=6, head_alignment_tolerance=4):
-        tail_remove_count = 0
-        if trim_tail:
-            for regex_token in reversed(self.tokens):
-                if regex_token.is_whitespace():
-                    if regex_token.max_len <= tail_alignment_tolerance:
-                        tail_remove_count += 1
-                else:
-                    break
-
-        head_remove_count = 0
-        if trim_head:
-            for regex_token in self.tokens:
-                if regex_token.is_whitespace():
-                    if regex_token.max_len <= head_alignment_tolerance:
-                        head_remove_count += 1
-                else:
-                    break
-
-        size = len(self.tokens)
-        tokens_str = "-".join(map(lambda tkn: tkn.token_hash_str(), self.tokens[head_remove_count:size-tail_remove_count]))
+    def token_hash_str(self):
+        tokens_str = "-".join(map(lambda tkn: tkn.token_hash_str(), self.tokens))
         return tokens_str
 
     def token_str(self):
@@ -382,23 +369,24 @@ class RegexTokenSet(AbsRegex):
             if isinstance(regex_token, NamedToken) and regex_token.name == token_name:
                 return regex_token
 
-    def trim(self, tail_alignment_tolerance=6, head_alignment_tolerance=4):
-
+    def trim(self, trim_head=True, trim_tail=True, tail_alignment_tolerance=6, head_alignment_tolerance=4):
         tail_remove_count = 0
-        for regex_token in reversed(self.tokens):
-            if regex_token.is_whitespace():
-                if regex_token.max_len <= tail_alignment_tolerance:
-                    tail_remove_count += 1
-            else:
-                break
+        if trim_tail:
+            for regex_token in reversed(self.tokens):
+                if regex_token.is_whitespace():
+                    if regex_token.max_len <= tail_alignment_tolerance:
+                        tail_remove_count += 1
+                else:
+                    break
 
         head_remove_count = 0
-        for regex_token in self.tokens:
-            if regex_token.is_whitespace():
-                if regex_token.max_len <= head_alignment_tolerance:
-                    head_remove_count += 1
-            else:
-                break
+        if trim_head:
+            for regex_token in self.tokens:
+                if regex_token.is_whitespace():
+                    if regex_token.max_len <= head_alignment_tolerance:
+                        head_remove_count += 1
+                else:
+                    break
 
         size = len(self.tokens)
         trimmed_tokens = self.tokens[head_remove_count:size-tail_remove_count]
@@ -408,13 +396,17 @@ class RegexTokenSet(AbsRegex):
 
         return trimmed_regex_token_set
 
-    def is_similar(self, second_token_set, debug=False):
+    def is_similar(self, second_token_set, trim=True, debug=False):
         if debug or False:
             print("  Self Tokens:\n{}".format(self.token_str()))
             print("Second Tokens:\n{}".format(second_token_set.token_str()))
 
-        self_trim = self.trim()
-        second_token_set_trim = second_token_set.trim()
+        if trim:
+            self_trim = self.trim()
+            second_token_set_trim = second_token_set.trim()
+        else:
+            self_trim = self
+            second_token_set_trim = second_token_set
 
         flag_match = True
         for idx, regex_token in enumerate(self_trim.tokens):
@@ -430,11 +422,16 @@ class RegexTokenSet(AbsRegex):
                 flag_match = False
                 if regex_token.token == Token.WORD:
                     if second_regex_token.token == Token.PHRASE:
-                        # regex_token.token = RegexToken(Token.PHRASE, _min_len=regex_token.min_len, _max_len=regex_token.max_len)
-                        regex_token.token = Token.PHRASE
+                        regex_token.set_token(Token.PHRASE_OR_WORD)
                         flag_match = True
                 elif regex_token.token == Token.PHRASE:
                     if second_regex_token.token == Token.WORD:
+                        regex_token.set_token(Token.PHRASE_OR_WORD)
+                        flag_match = True
+                elif regex_token.token == Token.PHRASE_OR_WORD:
+                    if second_regex_token.token == Token.PHRASE:
+                        flag_match = True
+                    elif second_regex_token.token == Token.WORD:
                         flag_match = True
 
                 if not flag_match:
@@ -446,13 +443,31 @@ class RegexTokenSet(AbsRegex):
         # complete match:
         if flag_match:
             if len(second_token_set_trim.tokens) > len(self_trim.tokens):
-                print("Prefix match: ignored")
+                print("Prefix Match: Ignored")
                 flag_match = False
             elif len(second_token_set_trim.tokens) == len(self_trim.tokens):
                 if len(self_trim.tokens) == 0:
-                    print("Blank match")
+                    print("Blank Match")
                 else:
-                    print("Complete match")
+                    if len(self.tokens) != len(second_token_set.tokens):
+                        print("Complete Trim Match")
+                        # print(" self: {}".format(self.token_str()))
+                        # print("second: {}".format(second_token_set.token_str()))
+                        # raise RuntimeError("The Trim has to be handled")
+                        if len(second_token_set.tokens) > len(self.tokens):
+                            last_token_of_second = second_token_set.tokens[-1]
+                            if last_token_of_second.token != Token.WHITESPACE_HORIZONTAL:
+                                raise RuntimeError("The last token of second_token_set in not WSH")
+                            self.tokens.append(RegexToken(Token.WHITESPACE_HORIZONTAL,
+                                                          _min_len=0,
+                                                          _max_len=last_token_of_second.max_len))
+                        else:
+                            last_token_of_self = self.tokens[-1]
+                            if last_token_of_self.token != Token.WHITESPACE_HORIZONTAL:
+                                raise RuntimeError("The last token of self in not WSH")
+                            last_token_of_self.min_len = 0
+                    else:
+                        print("Complete Match")
             else:
                 # In this case flag_match should be set to false in the above block
                 raise RuntimeError("This should have happened. Examine logic")
