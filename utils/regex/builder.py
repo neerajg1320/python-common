@@ -408,17 +408,22 @@ class RegexTokenSet(AbsRegex):
 
         return trimmed_regex_token_set
 
-    def is_similar(self, second_token_set):
-        # print("  Self Tokens:\n{}".format(self.token_str()))
-        # print("Second Tokens:\n{}".format(second_token_set.token_str()))
+    def is_similar(self, second_token_set, debug=False):
+        if debug:
+            print("  Self Tokens:\n{}".format(self.token_str()))
+            print("Second Tokens:\n{}".format(second_token_set.token_str()))
 
         if len(self.tokens) != len(second_token_set.tokens):
+            if len(self.trim().tokens) == len(second_token_set.trim().tokens):
+                raise RuntimeError("Need to handle this case")
             return False
 
-        for idx, regex_token in enumerate(self.tokens):
-            second_regex_token = second_token_set.tokens[idx]
+        for idx, regex_token in enumerate(self.trim().tokens):
+            second_regex_token = second_token_set.trim().tokens[idx]
             if regex_token.token != second_regex_token.token:
-                print("Token mismatch {} and {}".format(regex_token.token, second_regex_token.token))
+                if debug:
+                    print("Token mismatch {} and {}".format(regex_token.token, second_regex_token.token))
+
                 flag_match = False
                 if regex_token.token == Token.WORD:
                     if second_regex_token.token == Token.PHRASE:
@@ -803,9 +808,13 @@ class RegexTokenMap:
         flag_match = False
         for key, token_map_entry in self.token_sequence_map.items():
             group_token_sequence = token_map_entry['group_token_sequence']
-            if group_token_sequence.is_similar(token_sequence):
-                flag_match = True
-                break
+            try:
+                if group_token_sequence.is_similar(token_sequence):
+                    flag_match = True
+                    break
+            except RuntimeError as e:
+                print("Error! LineNum={} line_text={}".format(line_item["num"], line_item["text"]))
+                raise e
 
         if not flag_match:
             token_map_entry = self.create_new_token_map_entry(line_item, token_hash_key)
