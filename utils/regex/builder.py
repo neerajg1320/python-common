@@ -943,3 +943,40 @@ class RegexGenerator:
         return token_hash_map
 
 
+def build_and_apply_regex(text):
+    regex_dictionary = RegexDictionary()
+    regex_generator = RegexGenerator(regex_dictionary)
+
+    print("Regex Token Sequences:")
+    for item in regex_generator.generate_regex_token_sets_from_text(text):
+        print("{}:{}".format(item['num'], item['token_sequence'].token_str()))
+
+    print("Regex Token Hashes:")
+    for item in regex_generator.generate_regex_token_hashes_from_text(text):
+        print("{}:{}".format(item['num'], item['token_hash']))
+
+    print("Regex Token Hashmap:")
+    token_hash_map = regex_generator.get_token_hash_map(text)
+    result = []
+    for token_hash_key, token_hash_matches in token_hash_map.items():
+        item_count = len(token_hash_matches['items'])
+        group_regex_str = token_hash_matches['group_token_sequence'].regex_str()
+
+        token_hash_regex_match_result = regex_apply_on_text(group_regex_str, text, flags={"multiline": 1})
+        regex_match_count = len(token_hash_regex_match_result['matches'])
+
+        token_hash_key_token_count = len(token_hash_matches['group_token_sequence'].tokens)
+        token_hash_key_sample_count = len(token_hash_matches['items'])
+
+        # Sampled for debugging. token_hash_key_count to be removed when sampling finished.
+        if item_count != regex_match_count and token_hash_key == "S-D2-S-P-S-W-S-D2-S-N-S-N":
+            print("{:>30}[{:>3}]".format(token_hash_key,
+                                         token_hash_key_token_count, ))
+            print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))
+            print("    group_regex_str={}".format(group_regex_str))
+            print("Sample Count={:>4}".format(token_hash_key_sample_count))
+            print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
+
+            result = token_hash_regex_match_result
+
+    return result

@@ -9,7 +9,7 @@ def read_excel_as_array(filepath):
     for r in sheet.iter_rows():
         row = []
         for cell in r:
-            row.append(cell.value)
+            row.append(cell.token_hash_matches)
         rows.append(row)
 
     return rows
@@ -24,7 +24,7 @@ def read_excel_as_json_array(filepath, header=True):
     for i in range(1, max_col + 1):
         if header:
             cell = sheet.cell(row = 1, column = i)
-            columns.append(cell.value)
+            columns.append(cell.token_hash_matches)
         else:
             columns.append(str(i))
 
@@ -39,7 +39,7 @@ def read_excel_as_json_array(filepath, header=True):
 
         row_dict = {}
         for ci in range(max_col):
-            row_dict[columns[ci]] = sheet.cell(row = ri+1, column = ci+1).value
+            row_dict[columns[ci]] = sheet.cell(row = ri+1, column = ci+1).token_hash_matches
         dict_array.append(row_dict)
 
     return dict_array
@@ -60,7 +60,7 @@ def read_excel_all_sheets_as_json_array(filepath, header=True):
         for i in range(1, max_col + 1):
             if header:
                 cell = sheet.cell(row = 1, column = i)
-                columns.append(cell.value)
+                columns.append(cell.token_hash_matches)
             else:
                 columns.append(str(i))
 
@@ -73,7 +73,7 @@ def read_excel_all_sheets_as_json_array(filepath, header=True):
 
             row_dict = {}
             for ci in range(max_col):
-                row_dict[columns[ci]] = sheet.cell(row = ri+1, column = ci+1).value
+                row_dict[columns[ci]] = sheet.cell(row = ri+1, column = ci+1).token_hash_matches
             dict_array.append(row_dict)
 
         excel_dict[sheetname] = dict_array
