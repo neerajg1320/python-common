@@ -443,17 +443,19 @@ class RegexTokenSet(AbsRegex):
         # complete match:
         if flag_match:
             if len(second_token_set_trim.tokens) > len(self_trim.tokens):
-                print("Prefix Match: Ignored")
+                if debug:
+                    print("Prefix Match: Ignored")
                 flag_match = False
             elif len(second_token_set_trim.tokens) == len(self_trim.tokens):
                 if len(self_trim.tokens) == 0:
-                    print("Blank Match")
+                    if debug:
+                        print("Blank Match")
                 else:
                     if len(self.tokens) != len(second_token_set.tokens):
-                        print("Complete Trim Match")
-                        # print(" self: {}".format(self.token_str()))
-                        # print("second: {}".format(second_token_set.token_str()))
-                        # raise RuntimeError("The Trim has to be handled")
+                        if debug:
+                            print("Complete Trim Match")
+
+                        # TBD: This needs to be corrected. We need to address head_trim as well
                         if len(second_token_set.tokens) > len(self.tokens):
                             last_token_of_second = second_token_set.tokens[-1]
                             if last_token_of_second.token != Token.WHITESPACE_HORIZONTAL:
@@ -467,7 +469,8 @@ class RegexTokenSet(AbsRegex):
                                 raise RuntimeError("The last token of self in not WSH")
                             last_token_of_self.min_len = 0
                     else:
-                        print("Complete Match")
+                        if debug:
+                            print("Complete Match")
             else:
                 # In this case flag_match should be set to false in the above block
                 raise RuntimeError("This should have happened. Examine logic")
