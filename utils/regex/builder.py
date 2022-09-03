@@ -768,6 +768,24 @@ class RegexDictionary:
 
 
 @dataclass
+class RegexTokenMap:
+    token_sequence_map = {}
+
+    def get_or_create_entry(self, line_item):
+        key = line_item['token_hash']
+
+        if key not in self.token_sequence_map:
+            group_token_sequence = copy.deepcopy(line_item['token_sequence'])
+            print("LineNum:{} group_token_sequence='{}'".format(line_item['num'], group_token_sequence.token_str()))
+            # TBD: This happens in case line has no char. Need to check if we should assign a token
+            if group_token_sequence.token_str() == '':
+                print(group_token_sequence)
+            self.token_sequence_map[key] = {'group_token_sequence': group_token_sequence, 'line_items': []}
+
+        return self.token_sequence_map[key]
+
+
+@dataclass
 class RegexGenerator:
     regex_dictionary: RegexDictionary
     regex_colors: [] = field(init=False, default_factory=list)
@@ -942,7 +960,8 @@ class RegexGenerator:
             line_item.update({'token_hash': line_item['token_sequence'].token_hash_str()})
             yield line_item
 
-    def get_token_hash_map(self, text):
+    def generate_token_hash_map(self, text):
+        # TBD: This can be class
         token_hash_map = {}
         for line_item in self.generate_regex_token_hashes_from_text(text):
             key = line_item['token_hash']
@@ -985,7 +1004,7 @@ def build_and_apply_regex(text, flags=None):
         print("{}:{}".format(line_item['num'], line_item['token_hash']))
 
     print("Regex Token Hashmap:")
-    token_hash_map = regex_generator.get_token_hash_map(text)
+    token_hash_map = regex_generator.generate_token_hash_map(text)
     result = None
     color_index = 0
     for token_hash_key, token_hash_matches in token_hash_map.items():
