@@ -82,6 +82,7 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
 def regex_apply_on_text(regex_str, text, flags=None):
     pattern, regex_error = check_compile_regex(regex_str, flags=flags)
 
+    matches = []
     if not regex_error:
         matches = regex_pattern_apply_on_text(pattern, text)
 
@@ -113,6 +114,7 @@ def get_group_offsets(text, match, groups_dict):
 
     # debug_log(result)
     return result
+
 
 def regex_create_html(regex_str, text, flags=None):
     pattern, regex_error = check_compile_regex(regex_str, flags=flags)

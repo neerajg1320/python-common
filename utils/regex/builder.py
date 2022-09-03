@@ -29,8 +29,10 @@ class Token(Enum):
     # A phrase currently has a minimum of two words
     PHRASE = {"pattern_str": r"\S+(?:\s\S+)+", "min_len": 1, "max_len": None, "wildcard": False,
               "abbr": "PHR", "hash": "P"}
-    WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True,
+    WHITESPACE_HORIZONTAL = {"pattern_str": r"[ ]", "min_len": 1, "max_len": None, "wildcard": True,
                              "abbr": "WSH", "hash": "S"}
+    # WHITESPACE_HORIZONTAL = {"pattern_str": r"[^\S\r\n]", "min_len": 1, "max_len": None, "wildcard": True,
+    #                          "abbr": "WSH", "hash": "S"}
     WHITESPACE_ANY = {"pattern_str": r"\s", "min_len": 1, "max_len": None, "wildcard": True,
                       "abbr": "WSA", "hash": "SA"}
     ANY_CHAR = {"pattern_str": r".", "min_len": 1, "max_len": None, "wildcard": True,
