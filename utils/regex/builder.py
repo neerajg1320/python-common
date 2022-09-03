@@ -780,7 +780,7 @@ class RegexGenerator:
     def add_to_phrase_tokens(token_list, token, value, offset):
         token_list.append({'token': token, 'value': value, 'offset': offset})
 
-    def generate_tokens(self, text, detect_phrases=False, debug=False):
+    def generate_tokens(self, text, detect_phrases=True, debug=False):
         start_offset = 0
         text_len = len(text)
 
@@ -805,33 +805,39 @@ class RegexGenerator:
             match_token.min_len = token_match_len
             match_token.max_len = token_match_len
 
+            next_lookup_offset = start_offset + token_match_len
+
             if not detect_phrases:
                 if debug:
                     print("match_token={} token_match='{}'".format(match_token, token_match))
                 yield match_token, token_match
             else:
-                if regex_token.token == Token.WORD:
-                    self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
-                    # phrase_tokens.append(match_token)
-                    if debug:
-                        print("Added token '{}' to phrase".format(match_token))
-                    if not phrase_lookup_started:
-                        phrase_lookup_started = True
-                        phrase_start_offset = start_offset
-                    # Increment the phrase word count
-                    phrase_word_count += 1
-                elif regex_token.token == Token.WHITESPACE_HORIZONTAL:
-                    if phrase_lookup_started:
-                        if token_match_len <= self.phrase_space_tolerance:
-                            self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
-                            # phrase_tokens.append(match_token)
-                            if debug:
-                                print("Added token '{}' to phrase".format(match_token))
-                        else:
-                            phrase_lookup_ended = True
-                else:
+                if next_lookup_offset >= text_len:
                     if phrase_lookup_started:
                         phrase_lookup_ended = True
+                else:
+                    if regex_token.token == Token.WORD:
+                        self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
+                        # phrase_tokens.append(match_token)
+                        if debug:
+                            print("Added token '{}' to phrase".format(match_token))
+                        if not phrase_lookup_started:
+                            phrase_lookup_started = True
+                            phrase_start_offset = start_offset
+                        # Increment the phrase word count
+                        phrase_word_count += 1
+                    elif regex_token.token == Token.WHITESPACE_HORIZONTAL:
+                        if phrase_lookup_started:
+                            if token_match_len <= self.phrase_space_tolerance:
+                                self.add_to_phrase_tokens(phrase_tokens, match_token, token_match, start_offset)
+                                # phrase_tokens.append(match_token)
+                                if debug:
+                                    print("Added token '{}' to phrase".format(match_token))
+                            else:
+                                phrase_lookup_ended = True
+                    else:
+                        if phrase_lookup_started:
+                            phrase_lookup_ended = True
 
                 if phrase_lookup_ended:
                     if phrase_word_count > 1:
@@ -870,7 +876,7 @@ class RegexGenerator:
                     yield match_token, token_match
             # detect phrases
 
-            start_offset += token_match_len
+            start_offset = next_lookup_offset
 
         if detect_phrases and phrase_lookup_started:
             print("A phrase is pending")
@@ -921,7 +927,7 @@ class RegexGenerator:
 
     def get_token_hash_map(self, text):
         token_hash_map = {}
-        for _, line_item in enumerate(self.generate_regex_token_hashes_from_text(text)):
+        for line_item in self.generate_regex_token_hashes_from_text(text):
             key = line_item['token_hash']
             if key not in token_hash_map:
                 group_token_sequence = copy.deepcopy(line_item['token_sequence'])
