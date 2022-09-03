@@ -459,15 +459,19 @@ class RegexTokenSet(AbsRegex):
                         if len(second_token_set.tokens) > len(self.tokens):
                             last_token_of_second = second_token_set.tokens[-1]
                             if last_token_of_second.token != Token.WHITESPACE_HORIZONTAL:
-                                raise RuntimeError("The last token of second_token_set in not WSH")
-                            self.tokens.append(RegexToken(Token.WHITESPACE_HORIZONTAL,
-                                                          _min_len=0,
-                                                          _max_len=last_token_of_second.max_len))
+                                print("second_token_set {} head_trim correction not supported yet".format(second_token_set.token_str()))
+                                flag_match = False
+                            else:
+                                self.tokens.append(RegexToken(Token.WHITESPACE_HORIZONTAL,
+                                                              _min_len=0,
+                                                              _max_len=last_token_of_second.max_len))
                         else:
                             last_token_of_self = self.tokens[-1]
                             if last_token_of_self.token != Token.WHITESPACE_HORIZONTAL:
-                                raise RuntimeError("The last token of self in not WSH")
-                            last_token_of_self.min_len = 0
+                                print("self {} head_trim correction not supported yet".format(self.token_str()))
+                                flag_match = False
+                            else:
+                                last_token_of_self.min_len = 0
                     else:
                         if debug:
                             print("Complete Match")
