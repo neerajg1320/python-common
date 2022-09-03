@@ -733,11 +733,12 @@ class RegexDictionary:
     def __str__(self):
         return "\n".join(map(lambda x: "{}:{}".format(type(x).__name__, str(x)), self.tokens))
 
-    def token_first(self, text):
+    def token_first(self, text, debug=False):
         match_count = 0
         for token in self.tokens:
             token_regex_str = "^{}".format(token.regex_str())
-            # print("token_regex_str='{}' text='{}'".format(token_regex_str, text))
+            if debug:
+                print("token_regex_str='{}' text='{}'".format(token_regex_str, text))
             token_pattern = re.compile(token_regex_str)
 
             matches = regex_pattern_apply_on_text(token_pattern, text)
@@ -750,7 +751,9 @@ class RegexDictionary:
 
         token_match = matches[0]['match']
 
-        # print("token={} token_match={}".format(token, token_match))
+        if debug:
+            print("token={} token_match={}".format(token, token_match))
+
         return token, token_match
 
 
@@ -777,7 +780,7 @@ class RegexGenerator:
     def add_to_phrase_tokens(token_list, token, value, offset):
         token_list.append({'token': token, 'value': value, 'offset': offset})
 
-    def generate_tokens(self, text, detect_phrases=True, debug=False):
+    def generate_tokens(self, text, detect_phrases=False, debug=False):
         start_offset = 0
         text_len = len(text)
 
@@ -868,6 +871,10 @@ class RegexGenerator:
             # detect phrases
 
             start_offset += token_match_len
+
+        if detect_phrases and phrase_lookup_started:
+            print("A phrase is pending")
+
 
     def generate_token_sequence_and_verify_regex(self, line_text, debug=False):
         # Used for unit testing, to be placed in generate_tokens call
