@@ -10,10 +10,10 @@ import copy
 
 
 class Color(Enum):
-    COLOR1 = 'rgb(23, 45, 46)'
-    COLOR2 = 'rgb(63, 45, 46)'
-    COLOR3 = 'rgb(163, 45, 46)'
-    COLOR4 = 'rgb(63, 145, 46)'
+    COLOR1 = 'rgb(245, 229, 54)'   # yellow-like
+    COLOR2 = 'rgb(245, 142, 59)'   # orange-like
+    COLOR3 = 'rgb(240, 105, 84)'   # brick-like
+    COLOR4 = 'rgb(108, 195, 230)'  # lightblue-like
 
 
 class Alignment(Enum):
@@ -1009,7 +1009,7 @@ def build_and_apply_regex(text, flags=None):
             # print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
 
             for matches in token_hash_regex_match_result['matches']:
-                matches['match'].append(regex_generator.regex_colors[color_index])
+                matches['match'].append(regex_generator.regex_colors[color_index].value)
 
             color_index = (color_index + 1) % len(regex_generator.regex_colors)
 
