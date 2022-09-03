@@ -943,7 +943,7 @@ class RegexGenerator:
         return token_hash_map
 
 
-def build_and_apply_regex(text):
+def build_and_apply_regex(text, flags=None):
     regex_dictionary = RegexDictionary()
     regex_generator = RegexGenerator(regex_dictionary)
 

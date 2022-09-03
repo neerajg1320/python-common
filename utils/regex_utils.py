@@ -54,7 +54,7 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
 
             matches_with_absolute_offsets = set_groups_absolute_offset(matches_with_extended_groups)
 
-            if debug:
+            if debug or True:
                 logger.info("multiline_matches with absolute offsets:{}".format(matches_with_absolute_offsets))
 
             result['matches'] = matches_with_absolute_offsets
@@ -69,6 +69,12 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
             regex_processor.process()
             regex_processor.generate_matches_absolute()
             result['matches'] = regex_processor.matches_with_absolute_offsets
+
+    # Added for unit testing. Can be removed
+    flag_add_color = False
+    if flag_add_color:
+        for index, match in enumerate(result['matches']):
+            match['match'].append('rgb({}, 108, 222)'.format(38 + 50 * index))
 
     return result
 
