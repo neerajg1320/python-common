@@ -409,8 +409,8 @@ class RegexTokenSet(AbsRegex):
         return trimmed_regex_token_set
 
     def is_similar(self, second_token_set):
-        print("  Self Tokens:\n{}".format(self.token_str()))
-        print("Second Tokens:\n{}".format(second_token_set.token_str()))
+        # print("  Self Tokens:\n{}".format(self.token_str()))
+        # print("Second Tokens:\n{}".format(second_token_set.token_str()))
 
         if len(self.tokens) != len(second_token_set.tokens):
             return False
@@ -419,7 +419,17 @@ class RegexTokenSet(AbsRegex):
             second_regex_token = second_token_set.tokens[idx]
             if regex_token.token != second_regex_token.token:
                 print("Token mismatch {} and {}".format(regex_token.token, second_regex_token.token))
-                return False
+                flag_match = False
+                if regex_token.token == Token.WORD:
+                    if second_regex_token.token == Token.PHRASE:
+                        regex_token.token = RegexToken(Token.PHRASE, _min_len=regex_token.min_len, _max_len=regex_token.max_len)
+                        flag_match = True
+                elif regex_token.token == Token.PHRASE:
+                    if second_regex_token.token == Token.WORD:
+                        flag_match = True
+
+                if not flag_match:
+                    return False
 
         return True
 
@@ -798,9 +808,9 @@ class RegexTokenMap:
                 break
 
         if not flag_match:
-            self.create_new_token_map_entry(line_item, token_hash_key)
+            token_map_entry = self.create_new_token_map_entry(line_item, token_hash_key)
 
-        return self.token_sequence_map[token_hash_key]
+        return token_map_entry
 
     def get_or_create_exact(self, line_item):
         token_hash_key = line_item['token_hash']
@@ -817,6 +827,7 @@ class RegexTokenMap:
             print(group_token_sequence)
 
         self.token_sequence_map[token_hash_key] = {'group_token_sequence': group_token_sequence, 'line_items': []}
+        return self.token_sequence_map[token_hash_key]
 
     def get_or_create_entry(self, line_item, strategy='exact'):
         if strategy == 'exact':
