@@ -409,17 +409,20 @@ class RegexTokenSet(AbsRegex):
         return trimmed_regex_token_set
 
     def is_similar(self, second_token_set, debug=False):
-        if debug:
+        if debug or False:
             print("  Self Tokens:\n{}".format(self.token_str()))
             print("Second Tokens:\n{}".format(second_token_set.token_str()))
 
-        if len(self.tokens) != len(second_token_set.tokens):
-            if len(self.trim().tokens) == len(second_token_set.trim().tokens):
-                raise RuntimeError("Need to handle this case")
-            return False
+        self_trim = self.trim()
+        second_token_set_trim = second_token_set.trim()
 
-        for idx, regex_token in enumerate(self.trim().tokens):
-            second_regex_token = second_token_set.trim().tokens[idx]
+        flag_match = True
+        for idx, regex_token in enumerate(self_trim.tokens):
+            if idx >= len(second_token_set_trim.tokens):
+                flag_match = False
+                break
+
+            second_regex_token = second_token_set_trim.tokens[idx]
             if regex_token.token != second_regex_token.token:
                 if debug:
                     print("Token mismatch {} and {}".format(regex_token.token, second_regex_token.token))
@@ -427,16 +430,34 @@ class RegexTokenSet(AbsRegex):
                 flag_match = False
                 if regex_token.token == Token.WORD:
                     if second_regex_token.token == Token.PHRASE:
-                        regex_token.token = RegexToken(Token.PHRASE, _min_len=regex_token.min_len, _max_len=regex_token.max_len)
+                        # regex_token.token = RegexToken(Token.PHRASE, _min_len=regex_token.min_len, _max_len=regex_token.max_len)
+                        regex_token.token = Token.PHRASE
                         flag_match = True
                 elif regex_token.token == Token.PHRASE:
                     if second_regex_token.token == Token.WORD:
                         flag_match = True
 
                 if not flag_match:
-                    return False
+                    break
 
-        return True
+        # If match is there then either of following could be true
+        # trivial prefix match: group_token_set is []
+        # prefix match: len(second_token_set) > len(self.token_set)
+        # complete match:
+        if flag_match:
+            if len(second_token_set_trim.tokens) > len(self_trim.tokens):
+                print("Prefix match: ignored")
+                flag_match = False
+            elif len(second_token_set_trim.tokens) == len(self_trim.tokens):
+                if len(self_trim.tokens) == 0:
+                    print("Blank match")
+                else:
+                    print("Complete match")
+            else:
+                # In this case flag_match should be set to false in the above block
+                raise RuntimeError("This should have happened. Examine logic")
+
+        return flag_match
 
 
 class FixedRegexTokenSet(RegexTokenSet):
@@ -1084,11 +1105,12 @@ def build_and_apply_regex(text, flags=None):
         # if item_count != regex_match_count and token_hash_key == "S-D2-S-P-S-W-S-D2-S-N-S-N":
         # if True:
         if "D2" in token_hash_key:
-            print("{:<30}[{:>3}]".format(token_hash_key, token_hash_key_sample_count))
-            # print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))
-            # print("    group_regex_str={}".format(group_regex_str))
-            # print("Sample Count={:>4}".format(token_hash_key_sample_count))
-            # print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
+            print("{:<30}[{:>3}]".format("'{}'[{}]".format(token_hash_key, len(token_hash_key)),
+                                         token_hash_key_sample_count))
+            print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))
+            print("    group_regex_str={}".format(group_regex_str))
+            print("Sample Count={:>4}".format(token_hash_key_sample_count))
+            print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
 
             for matches in token_hash_regex_match_result['matches']:
                 matches['match'].append(regex_generator.regex_colors[color_index].value)
