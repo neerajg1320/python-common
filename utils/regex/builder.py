@@ -9,6 +9,13 @@ from utils.regex.patterns import get_line_matches_from_text
 import copy
 
 
+class Color(Enum):
+    COLOR1 = 'rgb(23, 45, 46)'
+    COLOR2 = 'rgb(63, 45, 46)'
+    COLOR3 = 'rgb(163, 45, 46)'
+    COLOR4 = 'rgb(63, 145, 46)'
+
+
 class Alignment(Enum):
     LEFT = 1
     RIGHT = 2
@@ -726,7 +733,8 @@ class RegexDictionary:
     def __post_init__(self):
         self.tokens.append(RegexToken(Token.DATE_YYYY))
         self.tokens.append(RegexToken(Token.DATE_YY))
-        self.tokens.append(RegexToken(Token.NUMBER))
+        # Disabled for unit testing
+        # self.tokens.append(RegexToken(Token.NUMBER))
         # Phrases are detected by combining words
         # self.tokens.append(RegexToken(Token.PHRASE))
         self.tokens.append(RegexToken(Token.WORD))
@@ -762,7 +770,14 @@ class RegexDictionary:
 @dataclass
 class RegexGenerator:
     regex_dictionary: RegexDictionary
+    regex_colors: [] = field(init=False, default_factory=list)
     phrase_space_tolerance: int = 1
+
+    def __post_init__(self):
+        self.regex_colors.append(Color.COLOR1)
+        self.regex_colors.append(Color.COLOR2)
+        self.regex_colors.append(Color.COLOR3)
+        self.regex_colors.append(Color.COLOR4)
 
     def __str__(self):
         return "Regex Dictionary: {}".format(self.regex_dictionary)
@@ -971,7 +986,8 @@ def build_and_apply_regex(text, flags=None):
 
     print("Regex Token Hashmap:")
     token_hash_map = regex_generator.get_token_hash_map(text)
-    result = []
+    result = None
+    color_index = 0
     for token_hash_key, token_hash_matches in token_hash_map.items():
         item_count = len(token_hash_matches['line_items'])
         group_regex_str = token_hash_matches['group_token_sequence'].regex_str()
@@ -984,14 +1000,22 @@ def build_and_apply_regex(text, flags=None):
 
         # Sampled for debugging. token_hash_key_count to be removed when sampling finished.
         # if item_count != regex_match_count and token_hash_key == "S-D2-S-P-S-W-S-D2-S-N-S-N":
-        if True:
-            print("{:>30}[{:>3}]".format(token_hash_key,
-                                         token_hash_key_token_count, ))
-            print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))
-            print("    group_regex_str={}".format(group_regex_str))
-            print("Sample Count={:>4}".format(token_hash_key_sample_count))
-            print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
+        # if True:
+        if "D2" in token_hash_key:
+            print("{:<30}[{:>3}]".format(token_hash_key, token_hash_key_sample_count))
+            # print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))
+            # print("    group_regex_str={}".format(group_regex_str))
+            # print("Sample Count={:>4}".format(token_hash_key_sample_count))
+            # print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
 
-            result = token_hash_regex_match_result
+            for matches in token_hash_regex_match_result['matches']:
+                matches['match'].append(regex_generator.regex_colors[color_index])
+
+            color_index = (color_index + 1) % len(regex_generator.regex_colors)
+
+            if result is None:
+                result = token_hash_regex_match_result
+            else:
+                result['matches'].extend(token_hash_regex_match_result['matches'])
 
     return result
