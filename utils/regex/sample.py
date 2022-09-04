@@ -64,7 +64,7 @@ def apply_regex_token_set(regex_token_set, text):
         for l_match_data in line_data['matches_in_line']:
             print("    Match: {}".format(l_match_data['match']))
             print("    Groups: {}".format(l_match_data['groups']))
-            # print("    FixedRegexTokenSet: {}".format(l_match['fixed_regex_token_set']))
+            # print("    FixedRegexTokenSequence: {}".format(l_match['fixed_regex_token_set']))
             print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_set'].regex_str()))
             print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_set'].shadow_token_set.regex_str()))
 

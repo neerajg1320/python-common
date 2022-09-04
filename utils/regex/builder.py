@@ -494,7 +494,7 @@ class FixedRegexTokenSequence(RegexTokenSequence):
 
     def push_token(self, token):
         if token.min_len != token.max_len:
-            raise RuntimeError("min_len must be equal to max_len for FixedRegexTokenSet")
+            raise RuntimeError("min_len must be equal to max_len for FixedRegexTokenSequence")
 
         super().push_token(token)
 
@@ -566,7 +566,7 @@ class FixedRegexTokenSequence(RegexTokenSequence):
 
 @dataclass
 class RegexTextProcessor:
-    regex_token_set: RegexTokenSequence
+    regex_token_sequence: RegexTokenSequence
     data: str = field(init=False, default=None)
     status: str = field(init=False, default='NEW')
     all_lines_with_offsets: list = field(default_factory=list, init=False)
@@ -583,7 +583,7 @@ class RegexTextProcessor:
         # We leave the \n out of the match even though we match the whole line
         self.all_lines_with_offsets = get_line_matches_from_text(self.data)
 
-        regex_str = self.regex_token_set.regex_str()
+        regex_str = self.regex_token_sequence.regex_str()
         pattern = re.compile(regex_str)
         shadow_pattern = None
         shadow_token_set = None
@@ -636,7 +636,7 @@ class RegexTextProcessor:
                         print("{:>4}:line_num={}".format(match_count, line_num))
                         print("{}".format(match_text), end="")
 
-                    line_regex_token_set = FixedRegexTokenSequence(flag_full_line=self.regex_token_set.flag_full_line)
+                    line_regex_token_set = FixedRegexTokenSequence(flag_full_line=self.regex_token_sequence.flag_full_line)
 
                     # First token_mask
                     whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
@@ -653,7 +653,7 @@ class RegexTextProcessor:
                         match_token_mask = [r'.', group[1], group[2], group[3]]
                         token_masks.append(match_token_mask)
 
-                        main_regex_token = self.regex_token_set.get_token_by_name(group[3])
+                        main_regex_token = self.regex_token_sequence.get_token_by_name(group[3])
                         # print("main_regex_token={}".format(main_regex_token))
 
                         line_regex_token_set.push_token(
