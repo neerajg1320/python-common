@@ -60,10 +60,10 @@ def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=Fal
             result['matches'] = matches_with_absolute_offsets
         else:
             # Import for testing. Later we will have construct
-            from utils.regex.sample import get_sample_hdfc_regex_token_set
+            from utils.regex.sample import get_sample_hdfc_regex_token_sequence
             from utils.regex.builder import RegexTextProcessor
 
-            regex_processor = RegexTextProcessor(get_sample_hdfc_regex_token_set())
+            regex_processor = RegexTextProcessor(get_sample_hdfc_regex_token_sequence())
             regex_processor.data = text
 
             regex_processor.process()

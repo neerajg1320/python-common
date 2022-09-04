@@ -126,11 +126,11 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
             # TBD: Need to create generate_token_set_from_regex function
 
             # Import for testing. Later we will have construct
-            from utils.regex.sample import get_sample_hdfc_regex_token_set
+            from utils.regex.sample import get_sample_hdfc_regex_token_sequence
             from utils.regex.builder import RegexTextProcessor
 
             # TBD: Check how we can use the same RegexTextProcessor instance for same text
-            regex_processor = RegexTextProcessor(get_sample_hdfc_regex_token_set())
+            regex_processor = RegexTextProcessor(get_sample_hdfc_regex_token_sequence())
             regex_processor.data = input_str
 
             regex_processor.process()

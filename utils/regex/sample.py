@@ -3,7 +3,7 @@ from .builder import Alignment, Token, RegexToken, CompositeToken, NamedToken, R
 from utils.dataframe.dataframe_utils import df_print
 
 
-def get_sample_hdfc_regex_token_set(debug=False):
+def get_sample_hdfc_regex_token_sequence(debug=False):
     regex_token_set = RegexTokenSequence(flag_full_line=True)
 
     # To be used in Debit and Credit where the value is blank as only one of Credit or Debit is specified
@@ -47,7 +47,7 @@ def get_sample_hdfc_regex_token_set(debug=False):
     return regex_token_set
 
 
-def apply_regex_token_set(regex_token_set, text):
+def apply_regex_token_sequence(regex_token_set, text):
     regex_text_processor = RegexTextProcessor(regex_token_set)
     regex_text_processor.data = text
 

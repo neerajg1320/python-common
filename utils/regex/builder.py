@@ -477,7 +477,7 @@ class RegexTokenSequence(AbsRegex):
                             print("Complete Match")
             else:
                 # In this case flag_match should be set to false in the above block
-                raise RuntimeError("This should have happened. Examine logic")
+                raise RuntimeError("This should not have happened. Examine logic")
 
         return flag_match
 
@@ -534,7 +534,7 @@ class FixedRegexTokenSequence(RegexTokenSequence):
             buffer = join_str.join([buffer, token_str])
         return buffer
 
-    def generate_shadow_token_set(self):
+    def generate_shadow_token_sequence(self):
         self._shadow_token_set = FixedRegexTokenSequence(flag_full_line=self.flag_full_line)
 
         for regex_token in self.tokens:
@@ -677,7 +677,7 @@ class RegexTextProcessor:
                     match_data['fixed_regex_token_set'] = line_regex_token_set
 
                     # Generate the shadow token set so that we can match the following lines
-                    line_regex_token_set.generate_shadow_token_set()
+                    line_regex_token_set.generate_shadow_token_sequence()
                     if line_regex_token_set.shadow_token_set is not None:
                         shadow_regex_str = line_regex_token_set.shadow_token_set.regex_str()
                         if debug:
