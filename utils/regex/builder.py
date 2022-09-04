@@ -1125,8 +1125,8 @@ def build_and_apply_regex(text, flags=None):
 
         # Sampled for debugging. token_hash_key_count to be removed when sampling finished.
         # if item_count != regex_match_count and token_hash_key == "S-D2-S-P-S-W-S-D2-S-N-S-N":
-        # if True:
-        if "D2" in token_hash_key:
+        if True:
+        # if "D2" in token_hash_key:
             print("{:<30}[{:>3}]".format("'{}'[{}]".format(token_hash_key, len(token_hash_key)),
                                          token_hash_key_sample_count))
             print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))

@@ -2,7 +2,7 @@ import subprocess
 
 
 def subprocess_pdf_to_text(pdf_file_path, text_file_path, password=None, debug=False):
-    command = ['pdftotext', '-layout', pdf_file_path, text_file_path]
+    command = ['pdftotext', '-layout', '-nopgbrk', pdf_file_path, text_file_path]
     if password is not None:
         command.extend(['-upw', password, '-opw', password])
 
