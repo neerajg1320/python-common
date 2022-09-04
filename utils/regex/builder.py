@@ -1167,8 +1167,11 @@ def build_and_apply_regex(text,
             print("Sample Count={:>4}".format(token_hash_key_sample_count))
             print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
 
-            for matches in token_hash_regex_match_result['matches']:
-                matches['match'].append(regex_generator.regex_colors[color_index].value)
+            for match in token_hash_regex_match_result['matches']:
+                match['match'].append(regex_generator.regex_colors[color_index].value)
+
+                for group in match['groups']:
+                    group.append(regex_generator.regex_colors[color_index].value)
 
             color_index = (color_index + 1) % len(regex_generator.regex_colors)
 
