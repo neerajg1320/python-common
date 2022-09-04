@@ -319,6 +319,25 @@ class RegexTokenSequence(AbsRegex):
     def set_full_line(self, flag_full_line):
         self.flag_full_line = flag_full_line
 
+    def generate_named_token_sequence(self, non_space_tokens=True, space_tokens=False):
+        self._named_token_sequence = RegexTokenSequence(flag_full_line=self.flag_full_line)
+
+        for tkn_idx, regex_token in enumerate(self.tokens):
+            if regex_token.is_whitespace():
+                if space_tokens:
+                    new_regex_token = NamedToken(regex_token, name="Token{}".format(tkn_idx))
+                else:
+                    new_regex_token = regex_token
+            else:
+                if non_space_tokens:
+                    new_regex_token = NamedToken(regex_token, name="Token{}".format(tkn_idx))
+                else:
+                    new_regex_token = regex_token
+
+            self._named_token_sequence.push_token(new_regex_token)
+
+        return self._named_token_sequence
+
     def regex_str(self, newline_between_tokens=False, token_join_str=None):
         join_str = self.default_token_join_str
 
@@ -1128,7 +1147,8 @@ def build_and_apply_regex(text,
     color_index = 0
     for token_hash_key, token_hash_matches in token_hash_map.items():
         item_count = len(token_hash_matches['line_items'])
-        group_regex_str = token_hash_matches['group_token_sequence'].regex_str()
+        # group_regex_str = token_hash_matches['group_token_sequence'].regex_str()
+        group_regex_str = token_hash_matches['group_token_sequence'].generate_named_token_sequence().regex_str()
 
         token_hash_regex_match_result = regex_apply_on_text(group_regex_str, text, flags={"multiline": 1})
         regex_match_count = len(token_hash_regex_match_result['matches'])
