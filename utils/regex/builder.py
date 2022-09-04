@@ -889,6 +889,28 @@ class RegexTokenMap:
         else:
             raise RuntimeError("strategy '{}' not supported".format(strategy))
 
+        group_token_sequence = token_map_entry['group_token_sequence']
+        item_token_sequence = line_item['token_sequence']
+
+        try:
+            for token_index in range(len(group_token_sequence.tokens)):
+                # This will happen when group_token_sequnce has a tail WS token
+                if token_index >= len(item_token_sequence.tokens):
+                    group_token = group_token_sequence.tokens[token_index]
+                    if group_token.is_whitespace():
+                        break
+                    else:
+                        raise RuntimeError("The token_map_entry {} has an extra token {}".format(token_map_entry, group_token))
+
+                if group_token_sequence.tokens[token_index].min_len > item_token_sequence.tokens[token_index].min_len:
+                    group_token_sequence.tokens[token_index].min_len = item_token_sequence.tokens[token_index].min_len
+                if group_token_sequence.tokens[token_index].max_len < item_token_sequence.tokens[token_index].max_len:
+                    group_token_sequence.tokens[token_index].max_len = item_token_sequence.tokens[token_index].max_len
+        except IndexError as e:
+            print("IndexError:")
+            print("group_token_sequence:{}".format(group_token_sequence.token_str()))
+            print(" item_token_sequence:{}".format(item_token_sequence.token_str()))
+
         return token_map_entry
 
     # TBD: Check how to create an iterator class
@@ -1042,9 +1064,6 @@ class RegexGenerator:
 
         # Create regex from generated tokens
         line_regex_str = regex_line_token_seq.regex_str()
-        if debug:
-            print("Regex Str:{}".format(regex_line_token_seq.regex_str()))
-            print("Tokens Str:{}".format(regex_line_token_seq.token_str()))
 
         matches = regex_apply_on_text(line_regex_str, line_text)['matches']
         if len(matches) > 0:
@@ -1052,6 +1071,9 @@ class RegexGenerator:
                 print("The regex generation is successful")
                 print(matches)
         else:
+            if debug:
+                print("Regex Str:{}".format(regex_line_token_seq.regex_str()))
+                print("Tokens Str:{}".format(regex_line_token_seq.token_str()))
             raise RuntimeError("The generated regex '{}' did not produce match with input text '{}'".
                                format(line_regex_str, line_text))
 
@@ -1064,6 +1086,7 @@ class RegexGenerator:
         for line_num, line_data in enumerate(lines_with_offsets, 1):
             line_text = line_data['match'][0]
             line_token_seq = self.generate_token_sequence_and_verify_regex(line_text)
+
             yield {"num": line_num, "text": line_text, 'token_sequence': line_token_seq}
 
     def generate_regex_token_hashes_from_text(self, text):
@@ -1078,26 +1101,16 @@ class RegexGenerator:
         for line_item in self.generate_regex_token_hashes_from_text(text):
             token_hash_map_entry = token_hash_map.get_or_create_entry(line_item, strategy='similar')
 
-            group_token_sequence = token_hash_map_entry['group_token_sequence']
-            item_token_sequence = line_item['token_sequence']
-
-            try:
-                for token_index in range(len(group_token_sequence.tokens)):
-                    if group_token_sequence.tokens[token_index].min_len > item_token_sequence.tokens[token_index].min_len:
-                        group_token_sequence.tokens[token_index].min_len = item_token_sequence.tokens[token_index].min_len
-                    if group_token_sequence.tokens[token_index].max_len < item_token_sequence.tokens[token_index].max_len:
-                        group_token_sequence.tokens[token_index].max_len = item_token_sequence.tokens[token_index].max_len
-            except IndexError as e:
-                print("IndexError:")
-                print("group_token_sequence:{}".format(group_token_sequence.token_str()))
-                print(" item_token_sequence:{}".format(item_token_sequence.token_str()))
-
+            # This needs to be moved to assimilate token
             token_hash_map_entry['line_items'].append(line_item)
 
         return token_hash_map
 
 
-def build_and_apply_regex(text, build_all=False):
+def build_and_apply_regex(text,
+                          build_all=False,
+                          assign_group_nonspace_tokens=True,
+                          assign_group_space_tokens=False):
     regex_dictionary = RegexDictionary()
     regex_generator = RegexGenerator(regex_dictionary)
 
