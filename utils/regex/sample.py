@@ -1,10 +1,10 @@
 import pandas as pd
-from .builder import Alignment, Token, RegexToken, CompositeToken, NamedToken, RegexTokenSet, RegexTextProcessor
+from .builder import Alignment, Token, RegexToken, CompositeToken, NamedToken, RegexTokenSequence, RegexTextProcessor
 from utils.dataframe.dataframe_utils import df_print
 
 
 def get_sample_hdfc_regex_token_set(debug=False):
-    regex_token_set = RegexTokenSet(flag_full_line=True)
+    regex_token_set = RegexTokenSequence(flag_full_line=True)
 
     # To be used in Debit and Credit where the value is blank as only one of Credit or Debit is specified
     blank_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, len=1)

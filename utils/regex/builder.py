@@ -300,7 +300,7 @@ class NamedToken(AbsRegex):
         return "(?P<{}>{})".format(self.name, self.regex_token.regex_str())
 
 
-class RegexTokenSet(AbsRegex):
+class RegexTokenSequence(AbsRegex):
     default_token_join_str = ""
 
     def __init__(self, flag_full_line=False):
@@ -391,7 +391,7 @@ class RegexTokenSet(AbsRegex):
         size = len(self.tokens)
         trimmed_tokens = self.tokens[head_remove_count:size-tail_remove_count]
 
-        trimmed_regex_token_set = RegexTokenSet()
+        trimmed_regex_token_set = RegexTokenSequence()
         trimmed_regex_token_set.tokens = trimmed_tokens
 
         return trimmed_regex_token_set
@@ -482,7 +482,7 @@ class RegexTokenSet(AbsRegex):
         return flag_match
 
 
-class FixedRegexTokenSet(RegexTokenSet):
+class FixedRegexTokenSequence(RegexTokenSequence):
     def __init__(self, *args, **kwargs):
         self._shadow_token_set = None
         super().__init__(*args, **kwargs)
@@ -535,7 +535,7 @@ class FixedRegexTokenSet(RegexTokenSet):
         return buffer
 
     def generate_shadow_token_set(self):
-        self._shadow_token_set = FixedRegexTokenSet(flag_full_line=self.flag_full_line)
+        self._shadow_token_set = FixedRegexTokenSequence(flag_full_line=self.flag_full_line)
 
         for regex_token in self.tokens:
             if regex_token.token == Token.WHITESPACE_HORIZONTAL or (not regex_token.multiline):
@@ -566,7 +566,7 @@ class FixedRegexTokenSet(RegexTokenSet):
 
 @dataclass
 class RegexTextProcessor:
-    regex_token_set: RegexTokenSet
+    regex_token_set: RegexTokenSequence
     data: str = field(init=False, default=None)
     status: str = field(init=False, default='NEW')
     all_lines_with_offsets: list = field(default_factory=list, init=False)
@@ -636,7 +636,7 @@ class RegexTextProcessor:
                         print("{:>4}:line_num={}".format(match_count, line_num))
                         print("{}".format(match_text), end="")
 
-                    line_regex_token_set = FixedRegexTokenSet(flag_full_line=self.regex_token_set.flag_full_line)
+                    line_regex_token_set = FixedRegexTokenSequence(flag_full_line=self.regex_token_set.flag_full_line)
 
                     # First token_mask
                     whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
@@ -1053,7 +1053,7 @@ class RegexGenerator:
         # Used for unit testing, to be placed in generate_tokens call
         # line_text_skewed = line_text[:-2]
 
-        regex_line_token_seq = RegexTokenSet(flag_full_line=True)
+        regex_line_token_seq = RegexTokenSequence(flag_full_line=True)
 
         if debug:
             print("Generate Tokens:")
