@@ -1171,7 +1171,7 @@ def build_and_apply_regex(text,
                 match['match'].append(regex_generator.regex_colors[color_index].value)
 
                 for group in match['groups']:
-                    group.append(regex_generator.regex_colors[color_index].value)
+                    group.insert(3, regex_generator.regex_colors[color_index].value)
 
             color_index = (color_index + 1) % len(regex_generator.regex_colors)
 
