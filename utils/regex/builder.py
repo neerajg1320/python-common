@@ -1126,10 +1126,7 @@ class RegexGenerator:
         return token_hash_map
 
 
-def build_and_apply_regex(text,
-                          build_all=False,
-                          assign_group_nonspace_tokens=True,
-                          assign_group_space_tokens=False):
+def build_and_apply_regex(text, build_all=False, extrapolate=False):
     regex_dictionary = RegexDictionary()
     regex_generator = RegexGenerator(regex_dictionary)
 
