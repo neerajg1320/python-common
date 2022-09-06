@@ -227,13 +227,16 @@ class RegexToken(AbsRegex):
         return self.token == Token.WHITESPACE_HORIZONTAL or self.token == Token.WHITESPACE_ANY
 
 
+@dataclass
 class RegexTokenSequence(AbsRegex):
-    default_token_join_str = ""
+    default_token_join_str: str = ""
+    tokens: List = field(init=False)
+    flag_full_line: bool = field(init=False)
 
     def __init__(self, flag_full_line=False):
         self.tokens: RegexToken = []
         self.flag_full_line = flag_full_line
-        self._named_token_sequence = None
+        self.named_token_sequence = None
 
     def __str__(self):
         return "\n".join(map(lambda x: str(x), self.tokens))
@@ -248,7 +251,7 @@ class RegexTokenSequence(AbsRegex):
         self.flag_full_line = flag_full_line
 
     def generate_named_token_sequence(self, non_space_tokens=True, space_tokens=False):
-        self._named_token_sequence = RegexTokenSequence(flag_full_line=self.flag_full_line)
+        self.named_token_sequence = RegexTokenSequence(flag_full_line=self.flag_full_line)
 
         for tkn_idx, regex_token in enumerate(self.tokens):
             if regex_token.is_whitespace():
@@ -258,9 +261,9 @@ class RegexTokenSequence(AbsRegex):
                 if non_space_tokens:
                     regex_token.capture_name = "Token{}".format(tkn_idx)
 
-            self._named_token_sequence.push_token(regex_token)
+            self.named_token_sequence.push_token(regex_token)
 
-        return self._named_token_sequence
+        return self.named_token_sequence
 
     def regex_str(self, newline_between_tokens=False, token_join_str=None):
         join_str = self.default_token_join_str
@@ -469,16 +472,9 @@ class RegexTokenSequence(AbsRegex):
         return regex_text_processor
 
 
-
+@dataclass(init=False)
 class FixedRegexTokenSequence(RegexTokenSequence):
-    def __init__(self, *args, **kwargs):
-        self._shadow_token_sequence = None
-        super().__init__(*args, **kwargs)
-
-    @property
-    def shadow_token_sequence(self):
-        """Shadow Token Set which is used to match following lines"""
-        return self._shadow_token_sequence
+    shadow_token_sequence: RegexTokenSequence = field(init=False)
 
     def push_token(self, token):
         if token.min_len != token.max_len:
@@ -523,7 +519,7 @@ class FixedRegexTokenSequence(RegexTokenSequence):
         return buffer
 
     def generate_shadow_token_sequence(self):
-        self._shadow_token_sequence = FixedRegexTokenSequence(flag_full_line=self.flag_full_line)
+        self.shadow_token_sequence = FixedRegexTokenSequence(flag_full_line=self.flag_full_line)
 
         for regex_token in self.tokens:
             if regex_token.token == Token.WHITESPACE_HORIZONTAL or (not regex_token.multiline):
@@ -531,9 +527,9 @@ class FixedRegexTokenSequence(RegexTokenSequence):
             else:
                 shd_token = regex_token
 
-            self._shadow_token_sequence.push_token(shd_token)
+            self.shadow_token_sequence.push_token(shd_token)
 
-        return self._shadow_token_sequence
+        return self.shadow_token_sequence
 
     def adjust_alignment(self, adjustment):
         flag_prev_adjusted = False
