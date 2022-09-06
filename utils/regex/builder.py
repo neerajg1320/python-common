@@ -507,7 +507,7 @@ class RegexTokenSequence(AbsRegex):
         regex_text_processor = RegexTextProcessor(self)
         regex_text_processor.data = text
 
-        regex_text_processor.process()
+        regex_text_processor.process(whitespace_line_tolerance=1, alignment_tolerance=6)
 
         sample_offset = 0
         sample_size = 10
