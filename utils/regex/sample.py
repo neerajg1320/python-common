@@ -47,8 +47,8 @@ def get_sample_hdfc_regex_token_sequence(debug=False):
     return regex_token_set
 
 
-def apply_regex_token_sequence(regex_token_set, text):
-    regex_text_processor = RegexTextProcessor(regex_token_set)
+def apply_regex_token_sequence(token_sequence, text):
+    regex_text_processor = RegexTextProcessor(token_sequence)
     regex_text_processor.data = text
 
     regex_text_processor.process()

@@ -605,7 +605,7 @@ class RegexTextProcessor:
         regex_str = self.regex_token_sequence.regex_str()
         pattern = re.compile(regex_str)
         shadow_pattern = None
-        shadow_token_set = None
+        shadow_token_sequence = None
 
         match_count = 0
         whitespace_line_count = 0
@@ -702,7 +702,7 @@ class RegexTextProcessor:
                         if debug:
                             print("Generated ShadowRegex:{}".format(shadow_regex_str))
                         shadow_pattern = re.compile(shadow_regex_str)
-                        shadow_token_set = line_regex_token_set.shadow_token_set
+                        shadow_token_sequence = line_regex_token_set.shadow_token_set
 
                 self.matched_lines_data.append(matched_line_data)
 
@@ -719,11 +719,11 @@ class RegexTextProcessor:
                         if alignment_tolerance > 0 and True:
 
                             for adjustment in range(1, alignment_tolerance+1):
-                                # print("Shadow  :{}".format(shadow_token_set.regex_str()))
+                                # print("Shadow  :{}".format(shadow_token_sequence.regex_str()))
                                 try:
-                                    shadow_token_set.adjust_alignment(1)
-                                    # print("Adjusted:{}".format(shadow_token_set.regex_str()))
-                                    adjusted_shadow_pattern = re.compile(shadow_token_set.regex_str())
+                                    shadow_token_sequence.adjust_alignment(1)
+                                    # print("Adjusted:{}".format(shadow_token_sequence.regex_str()))
+                                    adjusted_shadow_pattern = re.compile(shadow_token_sequence.regex_str())
                                     shadow_matches_in_line = regex_pattern_apply_on_text(adjusted_shadow_pattern, match_text)
                                     if len(shadow_matches_in_line) > 0:
                                         # print("Adjustment={} Found Match: {}".format(adjustment, match_text))
@@ -732,7 +732,7 @@ class RegexTextProcessor:
                                     print(e)
                                     break
                                     
-                            shadow_token_set.adjust_alignment(-adjustment)
+                            shadow_token_sequence.adjust_alignment(-adjustment)
 
                     if len(shadow_matches_in_line) > 0:
                         shadow_line_data = {
