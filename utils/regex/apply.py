@@ -29,7 +29,7 @@ def check_compile_regex(regex_str, flags=None):
     return pattern, error
 
 
-def regex_apply_on_text_extrapolate(regex_str, text, flags=None, extrapolate=False, debug=False):
+def regex_apply_on_text_enhanced(regex_str, text, flags=None, extrapolate=False, debug=False):
     result = regex_apply_on_text(regex_str, text, flags=flags)
 
     if extrapolate:
