@@ -63,17 +63,17 @@ def apply_regex_token_sequence(token_sequence, text):
         for l_match_data in line_data['matches_in_line']:
             print("    Match: {}".format(l_match_data['match']))
             print("    Groups: {}".format(l_match_data['groups']))
-            # print("    FixedRegexTokenSequence: {}".format(l_match['fixed_regex_token_set']))
-            print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_set'].regex_str()))
-            print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_set'].shadow_token_sequence.regex_str()))
+            # print("    FixedRegexTokenSequence: {}".format(l_match['fixed_regex_token_sequence']))
+            print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_sequence'].regex_str()))
+            print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_sequence'].shadow_token_sequence.regex_str()))
 
     alignment_analysis = False
     if alignment_analysis:
         print("The Mask Map:")
         for index, line_data in enumerate(matched_lines_sample):
             for l_match_data in line_data['matches_in_line']:
-                print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_set'].mask_str()))
-                print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_set'].shadow_token_sequence.mask_str()))
+                print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_sequence'].mask_str()))
+                print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_sequence'].shadow_token_sequence.mask_str()))
 
         print("The Text Lines:")
         for index, line_data in enumerate(matched_lines_sample):
@@ -83,7 +83,7 @@ def apply_regex_token_sequence(token_sequence, text):
         print("The Token Lengths Map:")
         for index, line_data in enumerate(matched_lines_sample):
             for l_match_data in line_data['matches_in_line']:
-                print("{}".format(l_match_data['fixed_regex_token_set'].token_type_len_str()))
+                print("{}".format(l_match_data['fixed_regex_token_sequence'].token_type_len_str()))
         # The next stage we will fix the alignment for the columns
 
     regex_text_processor.generate_matches_absolute()

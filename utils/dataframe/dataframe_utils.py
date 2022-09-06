@@ -123,7 +123,7 @@ def create_dataframe_from_text(regex_str, input_str, flags={"multiline": True},
                                                                 debug=False)
             df = create_dataframe_from_combined_matches(combined_matches)
         else:
-            # TBD: Need to create generate_token_set_from_regex function
+            # TBD: Need to create generate_token_sequence_from_regex function
 
             # Import for testing. Later we will have construct
             from utils.regex.sample import get_sample_hdfc_regex_token_sequence

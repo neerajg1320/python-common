@@ -457,8 +457,8 @@ class RegexTokenSequence(AbsRegex):
                     break
 
         # If match is there then either of following could be true
-        # trivial prefix match: group_token_set is []
-        # prefix match: len(second_token_set) > len(self.token_set)
+        # trivial prefix match: group_token_sequence is []
+        # prefix match: len(second_token_sequence) > len(self.token_sequence)
         # complete match:
         if flag_match:
             if len(second_token_sequence_trim.tokens) > len(self_trim.tokens):
@@ -478,7 +478,9 @@ class RegexTokenSequence(AbsRegex):
                         if len(second_token_sequence.tokens) > len(self.tokens):
                             last_token_of_second = second_token_sequence.tokens[-1]
                             if last_token_of_second.token != Token.WHITESPACE_HORIZONTAL:
-                                print("second_token_set {} head_trim correction not supported yet".format(second_token_sequence.token_str()))
+                                print("second_token_sequence {} head_trim correction not supported yet".format(
+                                    second_token_sequence.token_str())
+                                )
                                 flag_match = False
                             else:
                                 self.tokens.append(RegexToken(Token.WHITESPACE_HORIZONTAL,
@@ -693,7 +695,7 @@ class RegexTextProcessor:
                         RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
-                    match_data['fixed_regex_token_set'] = line_regex_token_sequence
+                    match_data['fixed_regex_token_sequence'] = line_regex_token_sequence
 
                     # Generate the shadow token set so that we can match the following lines
                     line_regex_token_sequence.generate_shadow_token_sequence()
