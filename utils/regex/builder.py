@@ -410,30 +410,30 @@ class RegexTokenSequence(AbsRegex):
         size = len(self.tokens)
         trimmed_tokens = self.tokens[head_remove_count:size-tail_remove_count]
 
-        trimmed_regex_token_set = RegexTokenSequence()
-        trimmed_regex_token_set.tokens = trimmed_tokens
+        trimmed_regex_token_sequence = RegexTokenSequence()
+        trimmed_regex_token_sequence.tokens = trimmed_tokens
 
-        return trimmed_regex_token_set
+        return trimmed_regex_token_sequence
 
-    def is_similar(self, second_token_set, trim=True, debug=False):
+    def is_similar(self, second_token_sequence, trim=True, debug=False):
         if debug or False:
             print("  Self Tokens:\n{}".format(self.token_str()))
-            print("Second Tokens:\n{}".format(second_token_set.token_str()))
+            print("Second Tokens:\n{}".format(second_token_sequence.token_str()))
 
         if trim:
             self_trim = self.trim()
-            second_token_set_trim = second_token_set.trim()
+            second_token_sequence_trim = second_token_sequence.trim()
         else:
             self_trim = self
-            second_token_set_trim = second_token_set
+            second_token_sequence_trim = second_token_sequence
 
         flag_match = True
         for idx, regex_token in enumerate(self_trim.tokens):
-            if idx >= len(second_token_set_trim.tokens):
+            if idx >= len(second_token_sequence_trim.tokens):
                 flag_match = False
                 break
 
-            second_regex_token = second_token_set_trim.tokens[idx]
+            second_regex_token = second_token_sequence_trim.tokens[idx]
             if regex_token.token != second_regex_token.token:
                 if debug:
                     print("Token mismatch {} and {}".format(regex_token.token, second_regex_token.token))
@@ -461,24 +461,24 @@ class RegexTokenSequence(AbsRegex):
         # prefix match: len(second_token_set) > len(self.token_set)
         # complete match:
         if flag_match:
-            if len(second_token_set_trim.tokens) > len(self_trim.tokens):
+            if len(second_token_sequence_trim.tokens) > len(self_trim.tokens):
                 if debug:
                     print("Prefix Match: Ignored")
                 flag_match = False
-            elif len(second_token_set_trim.tokens) == len(self_trim.tokens):
+            elif len(second_token_sequence_trim.tokens) == len(self_trim.tokens):
                 if len(self_trim.tokens) == 0:
                     if debug:
                         print("Blank Match")
                 else:
-                    if len(self.tokens) != len(second_token_set.tokens):
+                    if len(self.tokens) != len(second_token_sequence.tokens):
                         if debug:
                             print("Complete Trim Match")
 
                         # TBD: This needs to be corrected. We need to address head_trim as well
-                        if len(second_token_set.tokens) > len(self.tokens):
-                            last_token_of_second = second_token_set.tokens[-1]
+                        if len(second_token_sequence.tokens) > len(self.tokens):
+                            last_token_of_second = second_token_sequence.tokens[-1]
                             if last_token_of_second.token != Token.WHITESPACE_HORIZONTAL:
-                                print("second_token_set {} head_trim correction not supported yet".format(second_token_set.token_str()))
+                                print("second_token_set {} head_trim correction not supported yet".format(second_token_sequence.token_str()))
                                 flag_match = False
                             else:
                                 self.tokens.append(RegexToken(Token.WHITESPACE_HORIZONTAL,
@@ -503,13 +503,13 @@ class RegexTokenSequence(AbsRegex):
 
 class FixedRegexTokenSequence(RegexTokenSequence):
     def __init__(self, *args, **kwargs):
-        self._shadow_token_set = None
+        self._shadow_token_sequence = None
         super().__init__(*args, **kwargs)
 
     @property
-    def shadow_token_set(self):
+    def shadow_token_sequence(self):
         """Shadow Token Set which is used to match following lines"""
-        return self._shadow_token_set
+        return self._shadow_token_sequence
 
     def push_token(self, token):
         if token.min_len != token.max_len:
@@ -554,7 +554,7 @@ class FixedRegexTokenSequence(RegexTokenSequence):
         return buffer
 
     def generate_shadow_token_sequence(self):
-        self._shadow_token_set = FixedRegexTokenSequence(flag_full_line=self.flag_full_line)
+        self._shadow_token_sequence = FixedRegexTokenSequence(flag_full_line=self.flag_full_line)
 
         for regex_token in self.tokens:
             if regex_token.token == Token.WHITESPACE_HORIZONTAL or (not regex_token.multiline):
@@ -562,9 +562,9 @@ class FixedRegexTokenSequence(RegexTokenSequence):
             else:
                 shd_token = regex_token
 
-            self._shadow_token_set.push_token(shd_token)
+            self._shadow_token_sequence.push_token(shd_token)
 
-        return self._shadow_token_set
+        return self._shadow_token_sequence
 
     def adjust_alignment(self, adjustment):
         flag_prev_adjusted = False
@@ -655,7 +655,7 @@ class RegexTextProcessor:
                         print("{:>4}:line_num={}".format(match_count, line_num))
                         print("{}".format(match_text), end="")
 
-                    line_regex_token_set = FixedRegexTokenSequence(flag_full_line=self.regex_token_sequence.flag_full_line)
+                    line_regex_token_sequence = FixedRegexTokenSequence(flag_full_line=self.regex_token_sequence.flag_full_line)
 
                     # First token_mask
                     whitespace_token_mask = [r'\s', line_start_offset - match_start_offset, -1]
@@ -665,7 +665,7 @@ class RegexTextProcessor:
                             print("  {}: {:>5}:{:>5}: {:>20}:{:>50}".format(g_idx, group[1], group[2], group[3], group[0]))
 
                         whitespace_token_mask[2] = group[1]
-                        line_regex_token_set.push_token(
+                        line_regex_token_sequence.push_token(
                             RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                         )
 
@@ -675,7 +675,7 @@ class RegexTextProcessor:
                         main_regex_token = self.regex_token_sequence.get_token_by_name(group[3])
                         # print("main_regex_token={}".format(main_regex_token))
 
-                        line_regex_token_set.push_token(
+                        line_regex_token_sequence.push_token(
                             NamedToken(
                                 RegexToken(Token.ANY_CHAR,
                                            len=match_token_mask[2] - match_token_mask[1],
@@ -689,20 +689,20 @@ class RegexTextProcessor:
 
                     # Last token mask
                     whitespace_token_mask[2] = match_end_offset - match_start_offset
-                    line_regex_token_set.push_token(
+                    line_regex_token_sequence.push_token(
                         RegexToken(Token.WHITESPACE_HORIZONTAL, len=whitespace_token_mask[2] - whitespace_token_mask[1])
                     )
 
-                    match_data['fixed_regex_token_set'] = line_regex_token_set
+                    match_data['fixed_regex_token_set'] = line_regex_token_sequence
 
                     # Generate the shadow token set so that we can match the following lines
-                    line_regex_token_set.generate_shadow_token_sequence()
-                    if line_regex_token_set.shadow_token_set is not None:
-                        shadow_regex_str = line_regex_token_set.shadow_token_set.regex_str()
+                    line_regex_token_sequence.generate_shadow_token_sequence()
+                    if line_regex_token_sequence.shadow_token_sequence is not None:
+                        shadow_regex_str = line_regex_token_sequence.shadow_token_sequence.regex_str()
                         if debug:
                             print("Generated ShadowRegex:{}".format(shadow_regex_str))
                         shadow_pattern = re.compile(shadow_regex_str)
-                        shadow_token_sequence = line_regex_token_set.shadow_token_set
+                        shadow_token_sequence = line_regex_token_sequence.shadow_token_sequence
 
                 self.matched_lines_data.append(matched_line_data)
 

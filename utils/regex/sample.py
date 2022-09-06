@@ -1,50 +1,49 @@
 import pandas as pd
 from .builder import Alignment, Token, RegexToken, CompositeToken, NamedToken, RegexTokenSequence, RegexTextProcessor
-from utils.dataframe.dataframe_utils import df_print
 
 
 def get_sample_hdfc_regex_token_sequence(debug=False):
-    regex_token_set = RegexTokenSequence(flag_full_line=True)
+    token_sequence = RegexTokenSequence(flag_full_line=True)
 
     # To be used in Debit and Credit where the value is blank as only one of Credit or Debit is specified
     blank_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, len=1)
 
     # We have a starting space
-    regex_token_set.push_token(blank_token)
+    token_sequence.push_token(blank_token)
 
-    regex_token_set.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "TransactionDate"))
-    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _max_len=1))
-    regex_token_set.push_token(
+    token_sequence.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "TransactionDate"))
+    token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _max_len=1))
+    token_sequence.push_token(
         NamedToken(RegexToken(token=Token.PHRASE, _max_len=1, multiline=True, alignment=Alignment.LEFT), "Description"))
-    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=10, _max_len=90))
-    regex_token_set.push_token(NamedToken(RegexToken(token=Token.WORD, _min_len=15, _max_len=16), "ReferenceNum"))
-    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _max_len=1))
-    regex_token_set.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "ValueDate"))
-    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=20, _max_len=36))
+    token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=10, _max_len=90))
+    token_sequence.push_token(NamedToken(RegexToken(token=Token.WORD, _min_len=15, _max_len=16), "ReferenceNum"))
+    token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _max_len=1))
+    token_sequence.push_token(NamedToken(RegexToken(token=Token.DATE_YY), "ValueDate"))
+    token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=20, _max_len=36))
 
     # Debit token is an integer or a blank_token.
     debit_token = RegexToken(token=Token.NUMBER, _min_len=1, _max_len=20)
     debit_token_optional = NamedToken(CompositeToken(debit_token, blank_token), "Debit")
-    regex_token_set.push_token(debit_token_optional)
+    token_sequence.push_token(debit_token_optional)
 
-    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=10, _max_len=27))
+    token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=10, _max_len=27))
 
     # Debit token is an integer or a blank_token.
     credit_token = RegexToken(token=Token.NUMBER, _min_len=1, _max_len=20)
     credit_token_optional = NamedToken(CompositeToken(credit_token, blank_token), "Credit")
-    regex_token_set.push_token(credit_token_optional)
+    token_sequence.push_token(credit_token_optional)
 
-    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=15, _max_len=30))
-    regex_token_set.push_token(NamedToken(RegexToken(token=Token.NUMBER, _min_len=1, _max_len=20), "Balance"))
+    token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=15, _max_len=30))
+    token_sequence.push_token(NamedToken(RegexToken(token=Token.NUMBER, _min_len=1, _max_len=20), "Balance"))
 
     # We have a trailing space
-    regex_token_set.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=0, _max_len=4))
+    token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=0, _max_len=4))
 
     if debug:
         print("Regex Builder:")
-        print(regex_token_set)
+        print(token_sequence)
 
-    return regex_token_set
+    return token_sequence
 
 
 def apply_regex_token_sequence(token_sequence, text):
@@ -66,7 +65,7 @@ def apply_regex_token_sequence(token_sequence, text):
             print("    Groups: {}".format(l_match_data['groups']))
             # print("    FixedRegexTokenSequence: {}".format(l_match['fixed_regex_token_set']))
             print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_set'].regex_str()))
-            print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_set'].shadow_token_set.regex_str()))
+            print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_set'].shadow_token_sequence.regex_str()))
 
     alignment_analysis = False
     if alignment_analysis:
@@ -74,7 +73,7 @@ def apply_regex_token_sequence(token_sequence, text):
         for index, line_data in enumerate(matched_lines_sample):
             for l_match_data in line_data['matches_in_line']:
                 print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_set'].mask_str()))
-                print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_set'].shadow_token_set.mask_str()))
+                print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_set'].shadow_token_sequence.mask_str()))
 
         print("The Text Lines:")
         for index, line_data in enumerate(matched_lines_sample):
