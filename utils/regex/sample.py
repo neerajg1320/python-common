@@ -1,6 +1,6 @@
 import pandas as pd
 from .builder import Alignment, Token, RegexToken, CombineOperator, \
-    CompositeToken, NamedToken, RegexTokenSequence, RegexTextProcessor
+    NamedToken, RegexTokenSequence, RegexTextProcessor
 
 
 def get_sample_hdfc_regex_token_sequence(debug=False):

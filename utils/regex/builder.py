@@ -89,6 +89,7 @@ class RegexToken(AbsRegex):
                  wildcard=None,
                  multiline=False, alignment=Alignment.LEFT, join_str="\n"):
 
+        self.components = components
         if components is not None:
             if token is not None:
                 raise RuntimeError("Only one of the token or tokens can be present")
@@ -111,9 +112,9 @@ class RegexToken(AbsRegex):
         self.min_len = -1
         self.max_len = -1
 
+        self.token = token
         if token is not None:
             if isinstance(token, Token):
-                self.token = token
                 self.pattern_str = token.value['pattern_str']
                 if token.value['min_len'] is not None:
                     self.min_len = token.value['min_len']
@@ -121,7 +122,6 @@ class RegexToken(AbsRegex):
                     self.max_len = token.value['max_len']
                 self.wildcard = token.value['wildcard']
             elif isinstance(token, RegexToken):
-                # To be made
                 self.pattern_str = token.regex_str()
                 self.min_len = token.min_len
                 self.max_len = token.max_len
@@ -163,9 +163,15 @@ class RegexToken(AbsRegex):
         self.join_str = join_str
 
     def __str__(self):
-        return "(r'{}', {}, {}, {})".format(
-            # self.token if self.token is not None else self.pattern_str,
-            "",
+        if self.components is not None:
+            return " | ".join(map(lambda c: "{}:{}".format("c", str(c)), self.components))
+            # return "[components]"
+
+        return "({}, r'{}', {}, {}, {})".format(
+            type(self).__name__,
+            self.token if self.token is not None else self.pattern_str,
+            # self.pattern_str,
+            # "token",
             self.min_len,
             self.max_len,
             'M' if self.multiline else 'S'
@@ -231,44 +237,10 @@ class NamedToken(RegexToken):
 
     def __str__(self):
         return "{}:{}".format(self.name, super().__str__())
+        # return "{}:".format(self.name)
 
     def regex_str(self):
         return "(?P<{}>{})".format(self.name, super().regex_str())
-
-
-class CompositeToken(AbsRegex):
-    def __init__(self, *args, operator=CombineOperator.OR):
-        self.regex_tokens = []
-
-        if not isinstance(operator, CombineOperator):
-            raise RuntimeError("operator must be an instance of {}".format(CombineOperator.__name__))
-
-        self.operator = operator
-
-        for arg in args:
-            if not isinstance(arg, AbsRegex):
-                raise RuntimeError("arg '{}'[{}] is not of type {}".format(arg, type(arg), AbsRegex.__name__))
-
-            self.regex_tokens.append(arg)
-
-    def __str__(self):
-        lines = []
-        for index, token in enumerate(self.regex_tokens):
-            lines.append("token[{}]:{}".format(index, token))
-        return "\n".join(lines)
-
-    @property
-    def multiline(self):
-        """If Token is Multiline"""
-        return len(self.regex_tokens) > 0 and self.regex_tokens[0].multiline
-
-    def regex_str(self):
-        regexes = []
-        for index, token in enumerate(self.regex_tokens):
-            regexes.append(token.regex_str())
-        operator_str = self.operator.value["str"]
-        return operator_str.join(regexes)
-
 
 
 class RegexTokenSequence(AbsRegex):
