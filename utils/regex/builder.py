@@ -230,13 +230,8 @@ class RegexToken(AbsRegex):
 @dataclass
 class RegexTokenSequence(AbsRegex):
     default_token_join_str: str = ""
-    tokens: List = field(init=False)
-    flag_full_line: bool = field(init=False)
-
-    def __init__(self, flag_full_line=False):
-        self.tokens: RegexToken = []
-        self.flag_full_line = flag_full_line
-        self.named_token_sequence = None
+    tokens: List = field(default_factory=list)
+    flag_full_line: bool = field(default=False)
 
     def __str__(self):
         return "\n".join(map(lambda x: str(x), self.tokens))
@@ -472,7 +467,7 @@ class RegexTokenSequence(AbsRegex):
         return regex_text_processor
 
 
-@dataclass(init=False)
+@dataclass
 class FixedRegexTokenSequence(RegexTokenSequence):
     shadow_token_sequence: RegexTokenSequence = field(init=False)
 
