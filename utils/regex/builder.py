@@ -62,19 +62,30 @@ class AbsRegex:
         raise RuntimeError("Method has to be specified in subclass")
 
 
+@dataclass
 class RegexToken(AbsRegex):
+    token: Token = field(init=False)
+    pattern_str: str = field(init=False)
+    min_len: int = field(init=False)
+    max_len: int = field(init=False)
+    capture: bool = field(init=False)
+    capture_name: str = field(init=False)
+    wildcard: bool = field(init=False)
+    multiline: bool = field(init=False)
+    alignment: Alignment = field(init=False)
+    join_str: str = field(init=False)
+
     def __init__(self, token=None, pattern_str=None,
-                 _min_len=None, _max_len=None, len=None,
+                 min_len=None, max_len=None, len=None,
                  capture=False, capture_name=None,
-                 value_type=None, value_format=None,
                  wildcard=None,
                  multiline=False, alignment=Alignment.LEFT, join_str="\n"):
 
         if token is None and pattern_str is None:
             raise RuntimeError("Either of the token or string has to be specified")
 
-        self._min_len = -1
-        self._max_len = -1
+        self.min_len = -1
+        self.max_len = -1
 
         if token is not None:
             if not isinstance(token, Token):
@@ -84,9 +95,9 @@ class RegexToken(AbsRegex):
 
                 self.pattern_str = token.value['pattern_str']
                 if token.value['min_len'] is not None:
-                    self._min_len = token.value['min_len']
+                    self.min_len = token.value['min_len']
                 if token.value['max_len'] is not None:
-                    self._max_len = token.value['max_len']
+                    self.max_len = token.value['max_len']
                 self.wildcard = token.value['wildcard']
 
         # If both are defined then pattern_str overrides the pattern_str of token
@@ -94,14 +105,14 @@ class RegexToken(AbsRegex):
             self.pattern_str = pattern_str
 
         if len is not None:
-            self._min_len = len
-            self._max_len = len
+            self.min_len = len
+            self.max_len = len
 
-        if _min_len is not None:
-            self._min_len = _min_len
+        if min_len is not None:
+            self.min_len = min_len
 
-        if _max_len is not None:
-            self._max_len = _max_len
+        if max_len is not None:
+            self.max_len = max_len
 
         self.capture = capture
         self.capture_name = capture_name
@@ -110,13 +121,10 @@ class RegexToken(AbsRegex):
         if self.capture_name is not None:
             self.capture = True
 
-        self.value_type = value_type
-        self.value_format = value_format
-
         if wildcard is not None:
             self.wildcard = wildcard
 
-        self._multiline = multiline
+        self.multiline = multiline
         if alignment is not None:
             if not isinstance(alignment, Alignment):
                 raise RuntimeError("token must be an instance of enum Token")
@@ -128,38 +136,38 @@ class RegexToken(AbsRegex):
     def __str__(self):
         return "(r'{}', {}, {}, {})".format(
             self.token if self.token is not None else self.pattern_str,
-            self._min_len,
-            self._max_len,
-            'M' if self._multiline else 'S'
+            self.min_len,
+            self.max_len,
+            'M' if self.multiline else 'S'
         )
 
-    @property
-    def min_len(self):
-        """Minimum Occurrences of the token"""
-        return self._min_len
-
-    @min_len.setter
-    def min_len(self, len):
-        self._min_len = len
-
-    @property
-    def max_len(self):
-        """Maximum Occurrences of the token"""
-        return self._max_len
-
-    @max_len.setter
-    def max_len(self, len):
-        self._max_len = len
-
-    @property
-    def multiline(self):
-        """If Token is Multiline"""
-        return self._multiline
-
-    @property
-    def token_type(self):
-        """Type of RegexToken like DATE, NUMBER etc"""
-        return self.token
+    # @property
+    # def min_len(self):
+    #     """Minimum Occurrences of the token"""
+    #     return self._min_len
+    #
+    # @min_len.setter
+    # def min_len(self, len):
+    #     self._min_len = len
+    #
+    # @property
+    # def max_len(self):
+    #     """Maximum Occurrences of the token"""
+    #     return self._max_len
+    #
+    # @max_len.setter
+    # def max_len(self, len):
+    #     self._max_len = len
+    #
+    # @property
+    # def multiline(self):
+    #     """If Token is Multiline"""
+    #     return self._multiline
+    #
+    # @property
+    # def token_type(self):
+    #     """Type of RegexToken like DATE, NUMBER etc"""
+    #     return self.token
 
     def set_token(self, token):
         self.token = token
@@ -170,7 +178,7 @@ class RegexToken(AbsRegex):
         token_regex_str = self.pattern_str
 
         if self.wildcard:
-            wildcard_str = get_wildcard_str(self._min_len, self._max_len)
+            wildcard_str = get_wildcard_str(self.min_len, self.max_len)
             token_regex_str = "{}{}".format(self.pattern_str, wildcard_str)
 
         if self.capture:
@@ -258,20 +266,20 @@ class NamedToken(AbsRegex):
     @property
     def min_len(self):
         """Minimum Occurrences of the token"""
-        return self.regex_token._min_len
+        return self.regex_token.min_len
 
     @min_len.setter
     def min_len(self, len):
-        self.regex_token._min_len = len
+        self.regex_token.min_len = len
 
     @property
     def max_len(self):
         """Maximum Occurrences of the token"""
-        return self.regex_token._max_len
+        return self.regex_token.max_len
 
     @max_len.setter
     def max_len(self, len):
-        self.regex_token._max_len = len
+        self.regex_token.max_len = len
 
     @property
     def multiline(self):
@@ -486,8 +494,8 @@ class RegexTokenSequence(AbsRegex):
                                 flag_match = False
                             else:
                                 self.tokens.append(RegexToken(Token.WHITESPACE_HORIZONTAL,
-                                                              _min_len=0,
-                                                              _max_len=last_token_of_second.max_len))
+                                                              min_len=0,
+                                                              max_len=last_token_of_second.max_len))
                         else:
                             last_token_of_self = self.tokens[-1]
                             if last_token_of_self.token != Token.WHITESPACE_HORIZONTAL:
@@ -605,7 +613,7 @@ class FixedRegexTokenSequence(RegexTokenSequence):
 
         for regex_token in self.tokens:
             if regex_token.token == Token.WHITESPACE_HORIZONTAL or (not regex_token.multiline):
-                shd_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, _min_len=regex_token.min_len, _max_len=regex_token.max_len)
+                shd_token = RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=regex_token.min_len, max_len=regex_token.max_len)
             else:
                 shd_token = regex_token
 
