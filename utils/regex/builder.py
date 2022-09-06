@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Dict
+from typing import List, Dict, Optional
 import re
 from enum import Enum
 from .wildcard import get_wildcard_str
@@ -57,6 +57,11 @@ class Token(Enum):
         return self.value["hash"]
 
 
+class CombineOperator(Enum):
+    AND = {"str": ""}
+    OR = {"str": "|"}
+
+
 class AbsRegex:
     def regex_str(self):
         raise RuntimeError("Method has to be specified in subclass")
@@ -64,6 +69,8 @@ class AbsRegex:
 
 @dataclass
 class RegexToken(AbsRegex):
+    components: List = field(init=False)
+    operator: CombineOperator = field(init=False)
     token: Token = field(init=False)
     pattern_str: str = field(init=False)
     min_len: int = field(init=False)
@@ -75,30 +82,52 @@ class RegexToken(AbsRegex):
     alignment: Alignment = field(init=False)
     join_str: str = field(init=False)
 
-    def __init__(self, token=None, pattern_str=None,
+    def __init__(self, token=None, components=None, operator=None,
+                 pattern_str=None,
                  min_len=None, max_len=None, len=None,
                  capture=False, capture_name=None,
                  wildcard=None,
                  multiline=False, alignment=Alignment.LEFT, join_str="\n"):
 
-        if token is None and pattern_str is None:
-            raise RuntimeError("Either of the token or string has to be specified")
+        if components is not None:
+            if token is not None:
+                raise RuntimeError("Only one of the token or tokens can be present")
+            if operator is None:
+                raise RuntimeError("An operator must be present when components are specified")
+
+            for component in components:
+                if not isinstance(component, RegexToken):
+                    raise RuntimeError("component has to be of type {}".format(self.__class__.__name__))
+
+            self.components = components
+            self.operator = operator
+            join_str = operator.value['str']
+            self.pattern_str = join_str.join(map(lambda c: c.regex_str(), components))
+            self.wildcard = False
+        else:
+            if token is None and pattern_str is None:
+                raise RuntimeError("Either of the token, tokens or pattern_str has to be specified")
 
         self.min_len = -1
         self.max_len = -1
 
         if token is not None:
-            if not isinstance(token, Token):
-                raise RuntimeError("token must be an instance of enum Token")
-            else:
+            if isinstance(token, Token):
                 self.token = token
-
                 self.pattern_str = token.value['pattern_str']
                 if token.value['min_len'] is not None:
                     self.min_len = token.value['min_len']
                 if token.value['max_len'] is not None:
                     self.max_len = token.value['max_len']
                 self.wildcard = token.value['wildcard']
+            elif isinstance(token, RegexToken):
+                # To be made
+                self.pattern_str = token.regex_str()
+                self.min_len = token.min_len
+                self.max_len = token.max_len
+                self.wildcard = token.wildcard
+            else:
+                raise RuntimeError("token [{}] must be an instance of enum Token or RegexToken".format(type(token)))
 
         # If both are defined then pattern_str overrides the pattern_str of token
         if pattern_str is not None:
@@ -135,7 +164,8 @@ class RegexToken(AbsRegex):
 
     def __str__(self):
         return "(r'{}', {}, {}, {})".format(
-            self.token if self.token is not None else self.pattern_str,
+            # self.token if self.token is not None else self.pattern_str,
+            "",
             self.min_len,
             self.max_len,
             'M' if self.multiline else 'S'
@@ -191,14 +221,24 @@ class RegexToken(AbsRegex):
         return self.token == Token.WHITESPACE_HORIZONTAL or self.token == Token.WHITESPACE_ANY
 
 
-class CombineOperator(Enum):
-    AND = {"str": ""}
-    OR = {"str": "|"}
+@dataclass
+class NamedToken(RegexToken):
+    name: str = field(init=False)
+
+    def __init__(self, name, *args, **kwargs):
+        self.name = name
+        return super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        return "{}:{}".format(self.name, super().__str__())
+
+    def regex_str(self):
+        return "(?P<{}>{})".format(self.name, super().regex_str())
 
 
 class CompositeToken(AbsRegex):
     def __init__(self, *args, operator=CombineOperator.OR):
-        self.tokens = []
+        self.regex_tokens = []
 
         if not isinstance(operator, CombineOperator):
             raise RuntimeError("operator must be an instance of {}".format(CombineOperator.__name__))
@@ -209,91 +249,26 @@ class CompositeToken(AbsRegex):
             if not isinstance(arg, AbsRegex):
                 raise RuntimeError("arg '{}'[{}] is not of type {}".format(arg, type(arg), AbsRegex.__name__))
 
-            self.tokens.append(arg)
+            self.regex_tokens.append(arg)
 
     def __str__(self):
         lines = []
-        for index, token in enumerate(self.tokens):
+        for index, token in enumerate(self.regex_tokens):
             lines.append("token[{}]:{}".format(index, token))
         return "\n".join(lines)
 
     @property
     def multiline(self):
         """If Token is Multiline"""
-        return len(self.tokens) > 0 and self.tokens[0].multiline
+        return len(self.regex_tokens) > 0 and self.regex_tokens[0].multiline
 
     def regex_str(self):
         regexes = []
-        for index, token in enumerate(self.tokens):
+        for index, token in enumerate(self.regex_tokens):
             regexes.append(token.regex_str())
         operator_str = self.operator.value["str"]
         return operator_str.join(regexes)
 
-
-@dataclass()
-class NamedToken(AbsRegex):
-    token: RegexToken = field(init=False)
-    name: str = field(init=False)
-
-    def __init__(self, token, name):
-        if not isinstance(token, AbsRegex):
-            raise RuntimeError("token must be an instance of {}".format(AbsRegex.__name__))
-        self.regex_token = token
-
-        if not isinstance(name, str):
-            raise RuntimeError("name must be string")
-
-        # name_parts = name.split('__')
-        # self.multiline = len(name_parts) > 1 and name_parts[1] == 'M'
-        self.name = name
-
-    def __str__(self):
-        return "{}:{}".format(self.name, self.regex_token)
-
-    @property
-    def min_len(self):
-        """Minimum Occurrences of the token"""
-        return self.regex_token.min_len
-
-    @min_len.setter
-    def min_len(self, len):
-        self.regex_token.min_len = len
-
-    @property
-    def max_len(self):
-        """Maximum Occurrences of the token"""
-        return self.regex_token.max_len
-
-    @max_len.setter
-    def max_len(self, len):
-        self.regex_token.max_len = len
-
-    @property
-    def multiline(self):
-        """If Token is Multiline"""
-        return self.regex_token.multiline
-
-    @multiline.setter
-    def multiline(self, flag):
-        self.regex_token._multiline = flag
-
-    @property
-    def token_type(self):
-        """Type of RegexToken like DATE, NUMBER etc"""
-        return self.regex_token.token
-
-    @property
-    def token(self):
-        """Contained Regex Token"""
-        return self.regex_token
-
-    @property
-    def alignment(self):
-        """Alignment of Values in Table"""
-        return self.regex_token.alignment
-
-    def regex_str(self):
-        return "(?P<{}>{})".format(self.name, self.regex_token.regex_str())
 
 
 class RegexTokenSequence(AbsRegex):
@@ -426,11 +401,11 @@ class RegexTokenSequence(AbsRegex):
 
         flag_match = True
         for idx, regex_token in enumerate(self_trim.tokens):
-            if idx >= len(second_token_sequence_trim.tokens):
+            if idx >= len(second_token_sequence_trim.regex_tokens):
                 flag_match = False
                 break
 
-            second_regex_token = second_token_sequence_trim.tokens[idx]
+            second_regex_token = second_token_sequence_trim.regex_tokens[idx]
             if regex_token.token != second_regex_token.token:
                 if debug:
                     print("Token mismatch {} and {}".format(regex_token.token, second_regex_token.token))
@@ -458,22 +433,22 @@ class RegexTokenSequence(AbsRegex):
         # prefix match: len(second_token_sequence) > len(self.token_sequence)
         # complete match:
         if flag_match:
-            if len(second_token_sequence_trim.tokens) > len(self_trim.tokens):
+            if len(second_token_sequence_trim.regex_tokens) > len(self_trim.tokens):
                 if debug:
                     print("Prefix Match: Ignored")
                 flag_match = False
-            elif len(second_token_sequence_trim.tokens) == len(self_trim.tokens):
+            elif len(second_token_sequence_trim.regex_tokens) == len(self_trim.tokens):
                 if len(self_trim.tokens) == 0:
                     if debug:
                         print("Blank Match")
                 else:
-                    if len(self.tokens) != len(second_token_sequence.tokens):
+                    if len(self.tokens) != len(second_token_sequence.regex_tokens):
                         if debug:
                             print("Complete Trim Match")
 
                         # TBD: This needs to be corrected. We need to address head_trim as well
-                        if len(second_token_sequence.tokens) > len(self.tokens):
-                            last_token_of_second = second_token_sequence.tokens[-1]
+                        if len(second_token_sequence.regex_tokens) > len(self.tokens):
+                            last_token_of_second = second_token_sequence.regex_tokens[-1]
                             if last_token_of_second.token != Token.WHITESPACE_HORIZONTAL:
                                 print("second_token_sequence {} head_trim correction not supported yet".format(
                                     second_token_sequence.token_str())
@@ -718,13 +693,9 @@ class RegexTextProcessor:
                         # print("main_regex_token={}".format(main_regex_token))
 
                         line_regex_token_sequence.push_token(
-                            NamedToken(
-                                RegexToken(Token.ANY_CHAR,
-                                           len=match_token_mask[2] - match_token_mask[1],
-                                           multiline=main_regex_token.multiline),
-                                match_token_mask[3]
-                            )
-                        )
+                            NamedToken(match_token_mask[3], token=Token.ANY_CHAR,
+                                       len=match_token_mask[2] - match_token_mask[1],
+                                       multiline=main_regex_token.multiline))
 
                         whitespace_token_mask = [r'\s', group[2], -1, '']
                         token_masks.append(whitespace_token_mask)
@@ -954,19 +925,19 @@ class RegexTokenMap:
         item_token_sequence = line_item['token_sequence']
 
         try:
-            for token_index in range(len(group_token_sequence.tokens)):
+            for token_index in range(len(group_token_sequence.regex_tokens)):
                 # This will happen when group_token_sequnce has a tail WS token
-                if token_index >= len(item_token_sequence.tokens):
-                    group_token = group_token_sequence.tokens[token_index]
+                if token_index >= len(item_token_sequence.regex_tokens):
+                    group_token = group_token_sequence.regex_tokens[token_index]
                     if group_token.is_whitespace():
                         break
                     else:
                         raise RuntimeError("The token_map_entry {} has an extra token {}".format(token_map_entry, group_token))
 
-                if group_token_sequence.tokens[token_index].min_len > item_token_sequence.tokens[token_index].min_len:
-                    group_token_sequence.tokens[token_index].min_len = item_token_sequence.tokens[token_index].min_len
-                if group_token_sequence.tokens[token_index].max_len < item_token_sequence.tokens[token_index].max_len:
-                    group_token_sequence.tokens[token_index].max_len = item_token_sequence.tokens[token_index].max_len
+                if group_token_sequence.regex_tokens[token_index].min_len > item_token_sequence.regex_tokens[token_index].min_len:
+                    group_token_sequence.regex_tokens[token_index].min_len = item_token_sequence.regex_tokens[token_index].min_len
+                if group_token_sequence.regex_tokens[token_index].max_len < item_token_sequence.regex_tokens[token_index].max_len:
+                    group_token_sequence.regex_tokens[token_index].max_len = item_token_sequence.regex_tokens[token_index].max_len
         except IndexError as e:
             print("IndexError:")
             print("group_token_sequence:{}".format(group_token_sequence.token_str()))
@@ -1192,7 +1163,7 @@ def build_and_apply_regex(text, build_all=False, extrapolate=False):
         token_hash_regex_match_result = regex_apply_on_text(group_regex_str, text, flags={"multiline": 1})
         regex_match_count = len(token_hash_regex_match_result['matches'])
 
-        token_hash_key_token_count = len(token_hash_matches['group_token_sequence'].tokens)
+        token_hash_key_token_count = len(token_hash_matches['group_token_sequence'].regex_tokens)
         token_hash_key_sample_count = len(token_hash_matches['line_items'])
 
         # Sampled for debugging. token_hash_key_count to be removed when sampling finished.
