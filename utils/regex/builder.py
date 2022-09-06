@@ -141,6 +141,8 @@ class RegexToken(AbsRegex):
             'M' if self.multiline else 'S'
         )
 
+    # Kept for reference:
+    #
     # @property
     # def min_len(self):
     #     """Minimum Occurrences of the token"""
@@ -149,25 +151,6 @@ class RegexToken(AbsRegex):
     # @min_len.setter
     # def min_len(self, len):
     #     self._min_len = len
-    #
-    # @property
-    # def max_len(self):
-    #     """Maximum Occurrences of the token"""
-    #     return self._max_len
-    #
-    # @max_len.setter
-    # def max_len(self, len):
-    #     self._max_len = len
-    #
-    # @property
-    # def multiline(self):
-    #     """If Token is Multiline"""
-    #     return self._multiline
-    #
-    # @property
-    # def token_type(self):
-    #     """Type of RegexToken like DATE, NUMBER etc"""
-    #     return self.token
 
     def set_token(self, token):
         self.token = token
@@ -247,7 +230,11 @@ class CompositeToken(AbsRegex):
         return operator_str.join(regexes)
 
 
+@dataclass()
 class NamedToken(AbsRegex):
+    token: RegexToken = field(init=False)
+    name: str = field(init=False)
+
     def __init__(self, token, name):
         if not isinstance(token, AbsRegex):
             raise RuntimeError("token must be an instance of {}".format(AbsRegex.__name__))
