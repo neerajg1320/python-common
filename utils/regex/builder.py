@@ -252,9 +252,11 @@ class RegexTokenSequence(AbsRegex):
             if regex_token.is_whitespace():
                 if space_tokens:
                     regex_token.capture_name = "Token{}".format(tkn_idx)
+                    regex_token.capture = True
             else:
                 if non_space_tokens:
                     regex_token.capture_name = "Token{}".format(tkn_idx)
+                    regex_token.capture = True
 
             self.named_token_sequence.push_token(regex_token)
 
