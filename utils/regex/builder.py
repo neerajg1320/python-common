@@ -4,7 +4,7 @@ import re
 from enum import Enum
 from .wildcard import get_wildcard_str
 from .patterns import is_regex_comment_pattern, get_regex_comment_pattern, is_whitespace
-from utils.regex_utils import regex_apply_on_text, regex_pattern_apply_on_text
+from utils.regex.apply import regex_apply_on_text, regex_pattern_apply_on_text
 from utils.regex.patterns import get_line_matches_from_text
 import copy
 

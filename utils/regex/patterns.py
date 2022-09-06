@@ -1,5 +1,5 @@
 import re
-from ..regex_utils import regex_apply_on_text
+from utils.regex.apply import regex_apply_on_text
 
 
 # Used to match a valid string in regex comment pattern

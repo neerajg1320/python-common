@@ -99,7 +99,7 @@ def get_matches_with_group_relative_offsets(input_str, matches_with_para,
         post_para_str = input_str[buffer_start_offset_for_post_para:post_para_offsets[1]]
 
         # Necessary to avoid circular import
-        from utils.regex_utils import regex_apply_on_text
+        from utils.regex.apply import regex_apply_on_text
 
         # We should not put \n in the pattern as the last line in buffer might not be having one
         line_matches = regex_apply_on_text("^.*$", post_para_str, flags={'multiline': True})['matches']

@@ -5,12 +5,12 @@ import numpy as np
 import json
 import logging
 from collections import OrderedDict
-from utils.regex_utils import check_compile_regex
+from utils.regex.apply import check_compile_regex
 from utils.debug_utils import print_file_function
 from utils.text.lines import get_multiline_post_para_offsets, get_matches_with_group_relative_offsets,\
-    combine_matches_with_post_groups, print_combined_matches, print_matches_with_post_groups, \
+    combine_matches_with_post_groups, print_matches_with_post_groups, \
     extend_match_groups_with_post_groups, set_groups_absolute_offset
-from utils.regex_utils import regex_apply_on_text
+from utils.regex.apply import regex_apply_on_text
 
 
 logger = logging.getLogger(__name__)
