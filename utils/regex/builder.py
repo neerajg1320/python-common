@@ -306,6 +306,7 @@ class RegexTokenSequence(AbsRegex):
     def __init__(self, flag_full_line=False):
         self.tokens: RegexToken = []
         self.flag_full_line = flag_full_line
+        self._named_token_sequence = None
 
     def __str__(self):
         return "\n".join(map(lambda x: str(x), self.tokens))
@@ -501,6 +502,49 @@ class RegexTokenSequence(AbsRegex):
                 raise RuntimeError("This should not have happened. Examine logic")
 
         return flag_match
+
+    def apply(self, text):
+        regex_text_processor = RegexTextProcessor(self)
+        regex_text_processor.data = text
+
+        regex_text_processor.process()
+
+        sample_offset = 0
+        sample_size = 10
+        matched_lines_sample = regex_text_processor.matched_lines_data[sample_offset:sample_size]
+
+        print("Show Matched Lines Sample size={}".format(sample_size))
+        for index, line_data in enumerate(matched_lines_sample):
+            print("[{:>4}]  LineNum:{}".format(index, line_data['line_num']))
+
+            for l_match_data in line_data['matches_in_line']:
+                print("    Match: {}".format(l_match_data['match']))
+                print("    Groups: {}".format(l_match_data['groups']))
+                # print("    FixedRegexTokenSequence: {}".format(l_match['fixed_regex_token_sequence']))
+                print("    FixedRegex:{}".format(l_match_data['fixed_regex_token_sequence'].regex_str()))
+                print("    ShadowRegex:{}".format(l_match_data['fixed_regex_token_sequence'].shadow_token_sequence.regex_str()))
+
+        alignment_analysis = False
+        if alignment_analysis:
+            print("The Mask Map:")
+            for index, line_data in enumerate(matched_lines_sample):
+                for l_match_data in line_data['matches_in_line']:
+                    print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_sequence'].mask_str()))
+                    print("{:>4}: {}".format(index, l_match_data['fixed_regex_token_sequence'].shadow_token_sequence.mask_str()))
+
+            print("The Text Lines:")
+            for index, line_data in enumerate(matched_lines_sample):
+                for l_match_data in line_data['matches_in_line']:
+                    print("{:>4}: {}".format(index, l_match_data['match'][0]))
+
+            print("The Token Lengths Map:")
+            for index, line_data in enumerate(matched_lines_sample):
+                for l_match_data in line_data['matches_in_line']:
+                    print("{}".format(l_match_data['fixed_regex_token_sequence'].token_type_len_str()))
+            # The next stage we will fix the alignment for the columns
+
+        return regex_text_processor
+
 
 
 class FixedRegexTokenSequence(RegexTokenSequence):
