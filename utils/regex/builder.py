@@ -227,22 +227,6 @@ class RegexToken(AbsRegex):
         return self.token == Token.WHITESPACE_HORIZONTAL or self.token == Token.WHITESPACE_ANY
 
 
-@dataclass
-class NamedToken(RegexToken):
-    name: str = field(init=False)
-
-    def __init__(self, name, *args, **kwargs):
-        self.name = name
-        return super().__init__(*args, **kwargs)
-
-    def __str__(self):
-        return "{}:{}".format(self.name, super().__str__())
-        # return "{}:".format(self.name)
-
-    def regex_str(self):
-        return "(?P<{}>{})".format(self.name, super().regex_str())
-
-
 class RegexTokenSequence(AbsRegex):
     default_token_join_str = ""
 
@@ -269,16 +253,12 @@ class RegexTokenSequence(AbsRegex):
         for tkn_idx, regex_token in enumerate(self.tokens):
             if regex_token.is_whitespace():
                 if space_tokens:
-                    new_regex_token = NamedToken(regex_token, name="Token{}".format(tkn_idx))
-                else:
-                    new_regex_token = regex_token
+                    regex_token.capture_name = "Token{}".format(tkn_idx)
             else:
                 if non_space_tokens:
-                    new_regex_token = NamedToken(regex_token, name="Token{}".format(tkn_idx))
-                else:
-                    new_regex_token = regex_token
+                    regex_token.capture_name = "Token{}".format(tkn_idx)
 
-            self._named_token_sequence.push_token(new_regex_token)
+            self._named_token_sequence.push_token(regex_token)
 
         return self._named_token_sequence
 
@@ -329,7 +309,7 @@ class RegexTokenSequence(AbsRegex):
 
     def get_token_by_name(self, token_name):
         for regex_token in self.tokens:
-            if isinstance(regex_token, NamedToken) and regex_token.name == token_name:
+            if isinstance(regex_token, RegexToken) and regex_token.capture_name == token_name:
                 return regex_token
 
     def trim(self, trim_head=True, trim_tail=True, tail_alignment_tolerance=6, head_alignment_tolerance=4):
@@ -373,11 +353,11 @@ class RegexTokenSequence(AbsRegex):
 
         flag_match = True
         for idx, regex_token in enumerate(self_trim.tokens):
-            if idx >= len(second_token_sequence_trim.regex_tokens):
+            if idx >= len(second_token_sequence_trim.tokens):
                 flag_match = False
                 break
 
-            second_regex_token = second_token_sequence_trim.regex_tokens[idx]
+            second_regex_token = second_token_sequence_trim.tokens[idx]
             if regex_token.token != second_regex_token.token:
                 if debug:
                     print("Token mismatch {} and {}".format(regex_token.token, second_regex_token.token))
@@ -405,22 +385,22 @@ class RegexTokenSequence(AbsRegex):
         # prefix match: len(second_token_sequence) > len(self.token_sequence)
         # complete match:
         if flag_match:
-            if len(second_token_sequence_trim.regex_tokens) > len(self_trim.tokens):
+            if len(second_token_sequence_trim.tokens) > len(self_trim.tokens):
                 if debug:
                     print("Prefix Match: Ignored")
                 flag_match = False
-            elif len(second_token_sequence_trim.regex_tokens) == len(self_trim.tokens):
+            elif len(second_token_sequence_trim.tokens) == len(self_trim.tokens):
                 if len(self_trim.tokens) == 0:
                     if debug:
                         print("Blank Match")
                 else:
-                    if len(self.tokens) != len(second_token_sequence.regex_tokens):
+                    if len(self.tokens) != len(second_token_sequence.tokens):
                         if debug:
                             print("Complete Trim Match")
 
                         # TBD: This needs to be corrected. We need to address head_trim as well
-                        if len(second_token_sequence.regex_tokens) > len(self.tokens):
-                            last_token_of_second = second_token_sequence.regex_tokens[-1]
+                        if len(second_token_sequence.tokens) > len(self.tokens):
+                            last_token_of_second = second_token_sequence.tokens[-1]
                             if last_token_of_second.token != Token.WHITESPACE_HORIZONTAL:
                                 print("second_token_sequence {} head_trim correction not supported yet".format(
                                     second_token_sequence.token_str())
@@ -665,7 +645,7 @@ class RegexTextProcessor:
                         # print("main_regex_token={}".format(main_regex_token))
 
                         line_regex_token_sequence.push_token(
-                            NamedToken(match_token_mask[3], token=Token.ANY_CHAR,
+                            RegexToken(capture_name=match_token_mask[3], token=Token.ANY_CHAR,
                                        len=match_token_mask[2] - match_token_mask[1],
                                        multiline=main_regex_token.multiline))
 
@@ -897,19 +877,19 @@ class RegexTokenMap:
         item_token_sequence = line_item['token_sequence']
 
         try:
-            for token_index in range(len(group_token_sequence.regex_tokens)):
+            for token_index in range(len(group_token_sequence.tokens)):
                 # This will happen when group_token_sequnce has a tail WS token
-                if token_index >= len(item_token_sequence.regex_tokens):
-                    group_token = group_token_sequence.regex_tokens[token_index]
+                if token_index >= len(item_token_sequence.tokens):
+                    group_token = group_token_sequence.tokens[token_index]
                     if group_token.is_whitespace():
                         break
                     else:
                         raise RuntimeError("The token_map_entry {} has an extra token {}".format(token_map_entry, group_token))
 
-                if group_token_sequence.regex_tokens[token_index].min_len > item_token_sequence.regex_tokens[token_index].min_len:
-                    group_token_sequence.regex_tokens[token_index].min_len = item_token_sequence.regex_tokens[token_index].min_len
-                if group_token_sequence.regex_tokens[token_index].max_len < item_token_sequence.regex_tokens[token_index].max_len:
-                    group_token_sequence.regex_tokens[token_index].max_len = item_token_sequence.regex_tokens[token_index].max_len
+                if group_token_sequence.tokens[token_index].min_len > item_token_sequence.tokens[token_index].min_len:
+                    group_token_sequence.tokens[token_index].min_len = item_token_sequence.tokens[token_index].min_len
+                if group_token_sequence.tokens[token_index].max_len < item_token_sequence.tokens[token_index].max_len:
+                    group_token_sequence.tokens[token_index].max_len = item_token_sequence.tokens[token_index].max_len
         except IndexError as e:
             print("IndexError:")
             print("group_token_sequence:{}".format(group_token_sequence.token_str()))
@@ -1135,7 +1115,7 @@ def build_and_apply_regex(text, build_all=False, extrapolate=False):
         token_hash_regex_match_result = regex_apply_on_text(group_regex_str, text, flags={"multiline": 1})
         regex_match_count = len(token_hash_regex_match_result['matches'])
 
-        token_hash_key_token_count = len(token_hash_matches['group_token_sequence'].regex_tokens)
+        token_hash_key_token_count = len(token_hash_matches['group_token_sequence'].tokens)
         token_hash_key_sample_count = len(token_hash_matches['line_items'])
 
         # Sampled for debugging. token_hash_key_count to be removed when sampling finished.

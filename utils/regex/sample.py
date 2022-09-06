@@ -1,6 +1,4 @@
-import pandas as pd
-from .builder import Alignment, Token, RegexToken, CombineOperator, \
-    NamedToken, RegexTokenSequence, RegexTextProcessor
+from .builder import Alignment, Token, RegexToken, CombineOperator, RegexTokenSequence
 
 
 def get_sample_hdfc_regex_token_sequence(debug=False):
@@ -12,32 +10,32 @@ def get_sample_hdfc_regex_token_sequence(debug=False):
     # We have a starting space
     token_sequence.push_token(blank_token)
 
-    token_sequence.push_token(NamedToken("TransactionDate", token=Token.DATE_YY))
+    token_sequence.push_token(RegexToken(capture_name="TransactionDate", token=Token.DATE_YY))
     token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, max_len=1))
-    token_sequence.push_token(NamedToken("Description", token=Token.PHRASE, max_len=1, multiline=True,
-                                         alignment=Alignment.LEFT))
+    token_sequence.push_token(RegexToken(capture_name="Description", token=Token.PHRASE, max_len=1,
+                                         multiline=True, alignment=Alignment.LEFT))
     token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=10, max_len=90))
-    token_sequence.push_token(NamedToken("ReferenceNum", token=Token.WORD, min_len=15, max_len=16))
+    token_sequence.push_token(RegexToken(capture_name="ReferenceNum", token=Token.WORD, min_len=15, max_len=16))
     token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, max_len=1))
-    token_sequence.push_token(NamedToken("ValueDate", token=Token.DATE_YY))
+    token_sequence.push_token(RegexToken(capture_name="ValueDate", token=Token.DATE_YY))
     token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=20, max_len=36))
 
     # Debit token is an integer or a blank_token.
     debit_token = RegexToken(token=Token.NUMBER, min_len=1, max_len=20)
-    debit_token_optional = NamedToken("Debit", token=RegexToken(components=[debit_token, blank_token],
-                                                                operator=CombineOperator.OR))
+    debit_token_optional = RegexToken(capture_name="Debit", components=[debit_token, blank_token],
+                                      operator=CombineOperator.OR)
     token_sequence.push_token(debit_token_optional)
 
     token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=10, max_len=27))
 
     # Debit token is an integer or a blank_token.
     credit_token = RegexToken(token=Token.NUMBER, min_len=1, max_len=20)
-    credit_token_optional = NamedToken("Credit", token=RegexToken(components=[credit_token, blank_token],
-                                                                  operator=CombineOperator.OR))
+    credit_token_optional = RegexToken(capture_name="Credit", components=[credit_token, blank_token],
+                                       operator=CombineOperator.OR)
     token_sequence.push_token(credit_token_optional)
 
     token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=15, max_len=30))
-    token_sequence.push_token(NamedToken("Balance", token=Token.NUMBER, min_len=1, max_len=20))
+    token_sequence.push_token(RegexToken(capture_name="Balance", token=Token.NUMBER, min_len=1, max_len=20))
 
     # We have a trailing space
     token_sequence.push_token(RegexToken(token=Token.WHITESPACE_HORIZONTAL, min_len=0, max_len=4))
