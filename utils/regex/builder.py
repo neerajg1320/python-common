@@ -199,6 +199,7 @@ class RegexToken(AbsRegex):
     def is_whitespace(self):
         return self.token == Token.WHITESPACE_HORIZONTAL or self.token == Token.WHITESPACE_ANY
 
+
 class CombineOperator(Enum):
     AND = {"str": ""}
     OR = {"str": "|"}
@@ -640,7 +641,7 @@ class RegexTextProcessor:
     frame_objects: list = field(default_factory=list, init=False)
 
     # Our last whitespace token contains the match for \n as well
-    def process(self, whitespace_line_tolerance=1, alignment_tolerance=6, debug=False):
+    def process(self, whitespace_line_tolerance=0, alignment_tolerance=0, debug=False):
         if self.data is None:
             raise RuntimeError("get_matches_with_token_mask_builder(): data must be set before calling this function")
 
