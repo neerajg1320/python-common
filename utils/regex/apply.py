@@ -30,9 +30,17 @@ def check_compile_regex(regex_str, flags=None):
 
 
 def regex_apply_on_text_enhanced(regex_str, text, flags=None, extrapolate=False, debug=False):
+    if debug:
+        logger.info("regex_apply_on_text_enhanced():")
+        logger.info("regex_str={}".format(regex_str))
+        logger.info("text={}".format(text[0:100]))
+        logger.info("flags={}".format(flags))
+
     result = regex_apply_on_text(regex_str, text, flags=flags)
 
     if extrapolate:
+        if debug:
+            logger.info("Extrapolation Applied")
         extrapolate_new_approach = False
 
         if not extrapolate_new_approach:
@@ -75,6 +83,8 @@ def regex_apply_on_text_enhanced(regex_str, text, flags=None, extrapolate=False,
     if flag_add_color:
         for index, match in enumerate(result['matches']):
             match['match'].append('rgb({}, 108, 222)'.format(38 + 50 * index))
+        if debug:
+            logger.info("Color Information Added")
 
     return result
 
