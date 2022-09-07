@@ -848,9 +848,11 @@ class RegexTokenMap:
 
         return self.token_sequence_map[token_hash_key]
 
-    def create_new_token_map_entry(self, line_item, token_hash_key):
+    def create_new_token_map_entry(self, line_item, token_hash_key, debug=False):
         group_token_sequence = copy.deepcopy(line_item['token_sequence'])
-        print("New Entry: LineNum:{} group_token_sequence='{}'".format(line_item['num'], group_token_sequence.token_str()))
+        if debug:
+            print("New Entry: LineNum:{} group_token_sequence='{}'".format(line_item['num'], group_token_sequence.token_str()))
+
         # TBD: This happens in case line has no char. Need to check if we should assign a token
         if group_token_sequence.token_str() == '':
             print(group_token_sequence)
@@ -1056,18 +1058,18 @@ class RegexGenerator:
 
         return regex_line_token_seq
 
-    def generate_regex_token_sequence_per_line_from_text(self, text):
+    def generate_regex_token_sequence_per_line_from_text(self, text, debug=False):
         sample_offset = 0
         sample_size = 1000000
         lines_with_offsets = get_line_matches_from_text(text)[sample_offset:sample_offset+sample_size]
         for line_num, line_data in enumerate(lines_with_offsets, 1):
             line_text = line_data['match'][0]
-            line_token_seq = self.generate_token_sequence_and_verify_regex(line_text)
+            line_token_seq = self.generate_token_sequence_and_verify_regex(line_text, debug=debug)
 
             yield {"num": line_num, "text": line_text, 'token_sequence': line_token_seq}
 
-    def generate_regex_token_hashes_from_text(self, text):
-        for line_item in self.generate_regex_token_sequence_per_line_from_text(text):
+    def generate_regex_token_hashes_from_text(self, text, debug=False):
+        for line_item in self.generate_regex_token_sequence_per_line_from_text(text, debug=debug):
             line_item.update({'token_hash': line_item['token_sequence'].token_hash_str()})
             yield line_item
 
@@ -1084,20 +1086,26 @@ class RegexGenerator:
         return token_hash_map
 
 
-def build_and_apply_regex(text, build_all=False, extrapolate=False):
+def build_and_apply_regex(text, build_all=False, extrapolate=False, debug=True):
     regex_dictionary = RegexDictionary()
     regex_generator = RegexGenerator(regex_dictionary)
 
-    print("Regex Token Sequences:")
-    for line_item in regex_generator.generate_regex_token_sequence_per_line_from_text(text):
-        print("{}:{}".format(line_item['num'], line_item['token_sequence'].token_str()))
+    if debug:
+        print("Regex Token Sequences:")
+    for line_item in regex_generator.generate_regex_token_sequence_per_line_from_text(text, debug=debug):
+        if debug:
+            print("{}:{}".format(line_item['num'], line_item['token_sequence'].token_str()))
 
-    print("Regex Token Hashes:")
-    for line_item in regex_generator.generate_regex_token_hashes_from_text(text):
-        print("{}:{}".format(line_item['num'], line_item['token_hash']))
+    if debug:
+        print("Regex Token Hashes:")
+    for line_item in regex_generator.generate_regex_token_hashes_from_text(text, debug=debug):
+        if debug:
+            print("{}:{}".format(line_item['num'], line_item['token_hash']))
 
-    print("Regex Token Hashmap:")
+    if debug:
+        print("Regex Token Hashmap:")
     token_hash_map = regex_generator.generate_token_hash_map(text)
+
     result = None
     color_index = 0
     for token_hash_key, token_hash_matches in token_hash_map.items():
@@ -1116,12 +1124,13 @@ def build_and_apply_regex(text, build_all=False, extrapolate=False):
         # TBD: This condition we should be able to send from frontend
         # if "D2" in token_hash_key:
         if build_all or token_hash_key_token_count > 10:
-            print("{:<30}[{:>3}]".format("'{}'[{}]".format(token_hash_key, len(token_hash_key)),
-                                         token_hash_key_sample_count))
-            print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))
-            print("    group_regex_str={}".format(group_regex_str))
-            print("Sample Count={:>4}".format(token_hash_key_sample_count))
-            print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
+            if debug:
+                print("{:<30}[{:>3}]".format("'{}'[{}]".format(token_hash_key, len(token_hash_key)),
+                                             token_hash_key_sample_count))
+                print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))
+                print("    group_regex_str={}".format(group_regex_str))
+                print("Sample Count={:>4}".format(token_hash_key_sample_count))
+                print(" Match Count={:>4}".format(len(token_hash_regex_match_result['matches'])))
 
             for match in token_hash_regex_match_result['matches']:
                 match['match'].append(regex_generator.regex_colors[color_index].value)
