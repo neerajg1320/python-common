@@ -1080,7 +1080,9 @@ class RegexGenerator:
         return token_hash_map
 
 
-def build_and_apply_regex(text, build_all=False, extrapolate=False, debug=True):
+# TBD: This could be put under RegexTextProcessor?
+#      Currently this is a global funciton
+def build_token_hashmap(text, build_all=False, extrapolate=False, debug=True):
     regex_dictionary = RegexDictionary()
     regex_generator = RegexGenerator(regex_dictionary)
 
