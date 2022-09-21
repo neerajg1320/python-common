@@ -2,7 +2,7 @@ import camelot
 
 
 def pdf_to_tables(file_path, pages='1', file_password=None, debug=False):
-    tables = camelot.read_pdf(file_path, pages=pages)
+    tables = camelot.read_pdf(file_path, pages=pages, password=file_password)
     df_list = []
     for table in tables:
         df_list.append(table.df)
