@@ -1082,14 +1082,14 @@ class RegexGenerator:
 
 # TBD: This could be put under RegexTextProcessor?
 #      Currently this is a global funciton
-def build_token_hashmap(text, build_all=False, extrapolate=False, debug=True):
+def build_token_hashmap(text, build_all=False, extrapolate=False, debug=False):
     regex_dictionary = RegexDictionary()
     regex_generator = RegexGenerator(regex_dictionary)
 
     if debug:
         print("Regex Token Sequences:")
     for line_item in regex_generator.generate_regex_token_sequence_per_line_from_text(text, debug=debug):
-        if debug:
+        if debug or True:
             print("{}:{}".format(line_item['num'], line_item['token_sequence'].token_str()))
 
     if debug:
@@ -1098,7 +1098,7 @@ def build_token_hashmap(text, build_all=False, extrapolate=False, debug=True):
         if debug:
             print("{}:{}".format(line_item['num'], line_item['token_hash']))
 
-    if debug:
+    if debug or True:
         print("Regex Token Hashmap:")
     token_hash_map = regex_generator.generate_token_hash_map(text)
 
@@ -1119,10 +1119,11 @@ def build_token_hashmap(text, build_all=False, extrapolate=False, debug=True):
         # if item_count != regex_match_count and token_hash_key == "S-D2-S-P-S-W-S-D2-S-N-S-N":
         # TBD: This condition we should be able to send from frontend
         # if "D2" in token_hash_key:
-        if build_all or token_hash_key_token_count > 10:
-            if debug:
+        if build_all or token_hash_key_token_count >= 0:
+            if debug or True:
                 print("{:<30}[{:>3}]".format("'{}'[{}]".format(token_hash_key, len(token_hash_key)),
                                              token_hash_key_sample_count))
+            if debug:
                 print("    group_token_sequence:{}".format(token_hash_matches['group_token_sequence'].token_str()))
                 print("    group_regex_str={}".format(group_regex_str))
                 print("Sample Count={:>4}".format(token_hash_key_sample_count))
