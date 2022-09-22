@@ -480,9 +480,9 @@ def df_filter_by_row_and_header_signature(df, row_signature, header_signature=No
 
     # This is currently not used
     signature_df = df_type_signature(df)
-    if debug:
+    if debug or True:
         logger.info("signature_df: ")
-        df_print(signature_df)
+        df_print(signature_df, columns=True, shape=True)
 
     boolean_frame = df.apply(
         lambda row: filter_by_row_and_header_signature_and_value(row,
