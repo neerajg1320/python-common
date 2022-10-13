@@ -58,3 +58,12 @@ def subprocess_pdf_unlock(pdf_file_path, unlocked_file_path, password, debug=Fal
         print(" ".join(command))
 
     subprocess.run(command)
+
+
+def subprocess_pdf_lock(pdf_file_path, locked_file_path, password, key_size=128, debug=False):
+    command = ["qpdf", '--encrypt', password, password, str(key_size), "--", pdf_file_path, locked_file_path]
+
+    if debug:
+        print(" ".join(command))
+
+    subprocess.run(command)
