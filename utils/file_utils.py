@@ -95,6 +95,9 @@ def is_jpeg(file_path):
     extn = get_extn(file_path).lower()
     return extn == ".jpeg" or extn == ".jpg"
 
+def is_image(file_path):
+    return is_png(file_path) or is_jpeg(file_path)
+
 def is_txt(file_path):
     l_extn = get_extn(file_path).lower()
     return  l_extn == ".txt" or l_extn == ".text"
