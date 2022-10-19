@@ -106,10 +106,19 @@ def is_csv(file_path):
     l_extn = get_extn(file_path).lower()
     return  l_extn == ".csv"
 
+def is_xls(file_path):
+    l_extn = get_extn(file_path).lower()
+    return  l_extn == ".xls"
+
 def is_xlsx(file_path):
     l_extn = get_extn(file_path).lower()
     return  l_extn == ".xlsx"
 
+def is_spreadsheet(file_path):
+    return is_csv(file_path) or is_xls(file_path) or is_xlsx(file_path)
+
+def is_spreadsheet_type(file_type):
+    return file_type.lower() == "csv" or file_type.lower() == "xls" or file_type.lower() == "xlsx"
 
 def copy_file(src, dst):
     shutil.copy(src, dst)
