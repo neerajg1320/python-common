@@ -296,7 +296,7 @@ def df_write_excel(df, filepath, *args, **kwargs):
                             date_format='yyyy-mm-dd')
 
     df.to_excel(writer, *args, **kwargs)
-    writer.save()
+    writer.close()
 
 
 def dflist_write_excel(dflist, filepath, *args, **kwargs):
@@ -318,7 +318,7 @@ def dflist_write_excel(dflist, filepath, *args, **kwargs):
 
         df.to_excel(writer, sheet_name=suffix, *args, **kwargs)
 
-    writer.save()
+    writer.close()
 
 
 def df_to_oriented_json(df):
@@ -401,7 +401,7 @@ def df_append_excel(df, file_path, sheet_name, **kwargs):
     df.to_excel(writer, sheet_name=sheet_name, startrow=startrow, **kwargs)
 
     # save the workbook
-    writer.save()
+    writer.close()
 
 # https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas
 # Usage:
